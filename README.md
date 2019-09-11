@@ -7,12 +7,15 @@
 ```
 $ curl -sL https://deb.nodesource.com/setup_8.x | sudo -E bash -
 $ sudo apt-get install -y nodejs
-$ sudo npm install -g @angular/cli@1.6.7
+$ npm install -g @angular/cli@1.6.7
+
+#eacces-permissions-errors
+https://docs.npmjs.com/resolving-eacces-permissions-errors-when-installing-packages-globally#manually-change-npms-default-directory
 ```
 
 2. node_module install
 ```
-$ cd microservice/src/crossent/studio/web
+$ cd microservice/src/crossent/micro/studio/web
 $ npm install
 ```
 
