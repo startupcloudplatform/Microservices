@@ -1,3 +1,6 @@
 .ui.shape {
   display: block;
 }
+.ui.form .inline.field > select {
+  margin-top: -0.3em;
+}

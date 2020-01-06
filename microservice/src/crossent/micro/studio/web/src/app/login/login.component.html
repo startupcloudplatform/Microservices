@@ -1,6 +1,9 @@
+<!-- original
 <div class="page-login">
   <div class="ui centered grid container">
     <div class="nine wide column">
+ original -->
+
       <!--<div class="ui icon warning message">-->
         <!--<i class="lock icon"></i>-->
         <!--<div class="content">-->
@@ -10,6 +13,8 @@
           <!--<p>username or password</p>-->
         <!--</div>-->
       <!--</div>-->
+
+<!-- original
       <div class="ui fluid card">
         <div class="content">
           <form class="ui form" method="POST">
@@ -26,6 +31,44 @@
               Login
             </a>
           </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+original -->
+<div>
+  <!-- bg -->
+  <div class="background">
+    <div class="background-img">
+    </div>
+  </div>
+  <!-- //bg -->
+  <div class="login-container">
+    <div class="row">
+      <div class="col-md-12">
+        <div class="text-center m-b-md">
+          <div class="logo-img">
+	    <!--
+            <img src="assets/imgs/login_logo_color.png" alt="logo">
+	    -->
+          </div>
+          <small>Microservice Design studio</small>
+        </div>
+        <div class="hpanel">
+          <div class="panel-body">
+            <form action="#" id="loginForm" method="post">
+              <div class="form-group">
+                <label class="control-label" for="username">Username</label>
+                <input type="text" placeholder="example@gmail.com" title="아이디를 입력해주세요." required="" value="" name="username" id="username" class="form-control" [(ngModel)]="username">
+              </div>
+              <div class="form-group">
+                <label class="control-label" for="password">Password</label>
+                <input type="password" title="비밀번호를 입력해주세요." placeholder="******" required="" value="" name="password" id="password" class="form-control" [(ngModel)]="password">
+              </div>
+              <button class="btn btn-login btn-block" (click)="login()">로그인</button>
+            </form>
+          </div>
         </div>
       </div>
     </div>

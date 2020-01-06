@@ -3,3 +3,7 @@
   /*padding-bottom: 3em;*/
   display: grid;
 }
+/*semantic.css*/
+.ui.menu:not(.secondary):not(.text):not(.tabular):not(.borderless) > .container > .item:not(.right):not(.borderless):first-child {
+	border-left: NONE;
+}

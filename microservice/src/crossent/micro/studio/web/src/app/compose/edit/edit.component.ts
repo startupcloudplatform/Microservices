@@ -320,7 +320,7 @@ export class EditComponent implements OnInit {
   listMarketApps(name: string) {
     if(this.marketApps.length > 0) return;
     this.marketApps = [];
-    let route = 'apps/env?env=' + environment.cfEnvNameMSA;
+    let route = 'apps/env?env=' + environment.cfEnvNameMSA+'&private=' + environment.cfEnvNamePrivate;
     if(name) {
       route = route + '&name=' + name;
     }

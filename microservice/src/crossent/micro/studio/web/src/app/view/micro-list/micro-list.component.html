@@ -4,7 +4,7 @@
   </div>
 </h2>
 
-<div class="ui main container">
+<div class="ui main">
 
   <div class="box-wrap">
 
@@ -19,22 +19,22 @@
         </a>
       </div>
     </div>
-
+    <!-- line delete
     <div class="ui divider"></div>
-
+    -->
     <div class="ui link three stackable cards">
       <div class="card black"  *ngFor="let micro of (micros | searchFilter:searchName)">
-        <div class="content">
-          <div class="right floated ui orange basic1 mini label" [class.orange]="micro.status.startsWith('STOP')">{{micro.status}} </div>
+        <div class="content box-title">
+          <div class="right floated ui purple basic1 mini label" [class.blue-green]="micro.status.startsWith('START')">{{micro.status}} </div>
           <a class="header" routerLink="/detail/{{micro.id}}" routerLinkActive="active">{{micro.name}}</a>
         </div>
         <div class="image">
           <svg height="100%" width="100%">
             <line stroke="rgba(178,178,178,1)" stroke-width="1" stroke-opacity="0.3" [attr.x1]="[item.x1]" [attr.y1]="[item.y1]" [attr.x2]="[item.x2]" [attr.y2]="[item.y2]" *ngFor="let item of micro.links" />
-            <circle [attr.cx]="[item.x]" [attr.cy]="[item.y]" r="6" [attr.fill]="[item.fill]" *ngFor="let item of micro.circles"></circle>
+            <circle [attr.cx]="[item.x]" [attr.cy]="[item.y]" r="6" fill="rgba(100,100,100,1)" *ngFor="let item of micro.circles"></circle>
           </svg>
         </div>
-        <div class="content">
+        <div class="content box-info">
 
           <div class="meta">
             <p><i class="building icon"></i> {{micro.orgName}} / {{micro.spaceName}}</p>
@@ -44,12 +44,12 @@
             <p><i class="question circle outline icon"></i> {{micro.description}}</p>
           </div>
         </div>
-        <div class="extra content">
+        <div class="extra content box-bottom">
           <span class="right floated">
             ver. {{micro.version}}
           </span>
-          <span>
-            {{micro.app}} app
+          <span class="app-num">
+            <b>{{micro.app}}</b> app
           </span>
           <!--&nbsp;-->
           <!--<span class="ui star rating right">-->
@@ -62,9 +62,9 @@
         </div>
       </div>
     </div>
-
+    <!-- line delete
     <div class="ui divider"></div>
-
+    -->
     <div class="ui stackable grid">
       <div class="column">
         <button class="fluid ui button" (click)="more()" [hidden]="isEnd">
@@ -73,8 +73,6 @@
         </button>
       </div>
     </div>
-
-
 
   </div>
 </div>

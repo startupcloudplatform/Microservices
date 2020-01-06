@@ -4,7 +4,7 @@
     </div>
   </h2>
 
-  <div class="ui main container">
+  <div class="ui main">
 
     <div class="box-wrap">
 
@@ -28,9 +28,9 @@
           </div>
         </div>
       </div>
-
+      <!--
       <div class="ui divider"></div>
-
+      -->
       <div class="ui link three stackable cards">
         <div class="card black" *ngFor="let microapi of (microapis | searchApiFilter:searchName:part:searchPath) ; index as i">
           <div class="content box-title">
@@ -61,9 +61,9 @@
           </div>
         </div>
       </div>
-
+      <!--
       <div class="ui divider"></div>
-
+      -->
       <div class="ui stackable grid" *ngIf = "swaggerApiName == ''">
         <div class="column">
           <button class="fluid ui button" (click)="more()" [class.disabled]="isEnd" [class.basic]="isEnd">

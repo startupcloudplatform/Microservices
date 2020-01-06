@@ -400,8 +400,13 @@ func (s *Server) ListApp (w http.ResponseWriter, r *http.Request) {
 
 func (s *Server) ListAppByEnv (w http.ResponseWriter, r *http.Request) {
 
+	 // session user id
+	session := domain.SessionManager.Load(r)
+	userid, _ := session.GetString(domain.USER_ID)
+
 	name := r.FormValue("name")
 	envName := r.FormValue("env")
+	envPrivate := r.FormValue("private")
 
 	route := fmt.Sprintf("/v2/apps")
 	if name != "" {
@@ -418,7 +423,13 @@ func (s *Server) ListAppByEnv (w http.ResponseWriter, r *http.Request) {
 
 	for _, app := range result.Resources {
 		if _, ok := app.Entity.Environment[envName]; ok {
-			response.Resources = append(response.Resources, app)
+			if _, private := app.Entity.Environment[envPrivate]; private {
+				if userid == app.Entity.Environment[envPrivate] {
+					response.Resources = append(response.Resources, app)
+				}
+			}else{
+				response.Resources = append(response.Resources, app)
+			}
 		}
 	}
 
