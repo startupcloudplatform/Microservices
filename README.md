@@ -90,7 +90,7 @@ $ bosh add-blob golang-linux-amd64-1.8.3.tar.gz golang/golang-linux-amd64-1.8.3.
 $ bosh add-blob jq-linux64-1.5 jq/jq-linux64-1.5
 $ bosh add-blob grafana-5.3.4.linux-x64.tar.gz grafana/grafana-5.3.4.linux-x64.tar.gz
 $ bosh add-blob nginx-1.10.3.tar.gz nginx/nginx-1.10.3.tar.gz
-$ bosh add-blob binary/pcre-8.42.tar.gz nginx/pcre-8.42.tar.gz
+$ bosh add-blob pcre-8.42.tar.gz nginx/pcre-8.42.tar.gz
 $ bosh add-blob prometheus-2.5.0.linux-amd64.tar.gz prometheus/prometheus-2.5.0.linux-amd64.tar.gz
 $ bosh add-blob traefik-1.6.5_linux-amd64.gz traefik/traefik-1.6.5_linux-amd64.gz
 ```
