@@ -40,8 +40,6 @@ export class ApiHealthComponent implements OnInit {
       .mergeMap(() => this.apiService.get<any>(`apigateway/health/microservices`))
       .subscribe(data => {
         if (data) {
-          console.log(data);
-
           if (!_.isEqual(this.previousRecentErrors, data.recent_errors)) {
             this.previousRecentErrors = _.cloneDeep(data.recent_errors);
             this.recentErrors = data.recent_errors;

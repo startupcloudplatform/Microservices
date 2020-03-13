@@ -67,6 +67,9 @@
             <button class="ui icon button" [routerLink]="['/apiedit', microapi.id]" title="수정">
               <i class="pencil alternate icon"></i>
             </button>
+            <button class="ui icon button" [routerLink]="['/apiuserlist', microapi.id]" title="Basic Auth 정보">
+              <i class="group alternate icon"></i>
+            </button>
             <button class="ui icon button" (click)="deleteApi(microapi.id)" title="삭제">
               <i class="trash alternate outline icon"></i>
             </button>

@@ -86,3 +86,14 @@ div.scroll-list {
   height: 2.25rem;
   padding: .625rem 0 0 0;
 }
+
+/* app */
+.app-box{
+  min-height: 309px;
+  max-height: 760px;
+  overflow-y: auto;
+}
+
+h6.red{
+  color: red;
+}

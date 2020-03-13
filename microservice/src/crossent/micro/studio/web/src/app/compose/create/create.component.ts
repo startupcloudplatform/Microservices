@@ -91,7 +91,6 @@ export class CreateComponent implements OnInit {
     if(form.controls['name'].valid == true && form.controls['name'].valid != false) {
       this.apiService.get('microservices?name=' + this.microservice.name).subscribe(
         data => {
-          console.log(data)
           if (data == 0) {
             this.step = 2;
           } else {
@@ -131,10 +130,10 @@ export class CreateComponent implements OnInit {
       },
       err => {
         if(err.error && err.error.indexOf('duplicateName') != -1){
-          alert('입력하신 마이크로서비스명이 이미 존재합니다.')
+          alert('입력하신 마이크로서비스명이 이미 존재합니다.');
           return;
         }
-        alert(err)
+        alert(err);
         console.log(err);
       }
     );

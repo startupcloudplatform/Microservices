@@ -54,7 +54,7 @@
           <div class="field" [class.error]="!(name.valid || name.pristine && !name.touched)">
             <h5 class="ui header">마이크로서비스명 <i class="red asterisk icon"></i></h5>
             <input type="text" placeholder="Name" id="name"
-                   pattern="^[A-Za-z_-]{3,20}$"
+                   pattern="^[A-Za-z]{1,}[A-Za-z0-9_-]{2,20}$"
                    required
                    [(ngModel)]="microservice.name" name="name"
                    #name="ngModel">
@@ -72,12 +72,12 @@
               필수 입력 항목입니다.
             </div>
           </div>
-          <div class="field">
+          <div class="field" style='display:none'>
             <h5 class="ui dividing header">공개 선택</h5>
             <div class="grouped fields">
               <div class="field">
                 <div class="field">
-                  <div class="ui radio checkbox" style='display:none'>
+                  <div class="ui radio checkbox">
                     <input type="radio" name="visible" [value]="'false'" [(ngModel)]="microservice.visible" id="private">
                     <label for="private">private</label>
                   </div>

@@ -3,6 +3,7 @@ export const environment = {
   apiUrl: 'http://10.244.238.2:9088/api/v1',
   swaggerApiUrl: 'http://10.244.238.2:9088/swagger/',
   cfEnvNameMSA: 'msa',
+  cfEnvNamePrivate: 'private',
   msServices: 'config-server,registry-server,gateway-server',
   sampleApps: 'front,back',
   nodeTypeApp: 'App',

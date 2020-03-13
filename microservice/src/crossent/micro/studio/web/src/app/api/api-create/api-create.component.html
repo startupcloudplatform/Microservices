@@ -72,9 +72,12 @@
                   </div>
                   <div class="field">
                     <label>Path Prefix <i class="red asterisk icon"></i></label>
-                    <input id="path" name="path" placeholder="/path" required type="text" [(ngModel)]="microapi.path">
+                    <input id="path" name="path" placeholder="/path" required type="text" [(ngModel)]="microapi.path"  (input)="PathNext(defaultForm)">
                     <div class="ui pointing right label red hide" hidden="">
                       필수 입력 항목입니다.
+                    </div>
+                    <div *ngIf="isPathValid == false" class="ui pointing right label red">
+                      Path가 이미 존재합니다.
                     </div>
                   </div>
                 </div>

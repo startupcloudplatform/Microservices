@@ -26,5 +26,6 @@ export class MicroApi {
     public username?: string,
     public userpassword?: string,
     public orgguid?: string,
+    public microname?: string,
   ) {}
 }

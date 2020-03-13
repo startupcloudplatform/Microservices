@@ -34,12 +34,13 @@ export class MicroListComponent implements OnInit {
       data => {
         this.micros = data;
 
-        for(let i=0;i<this.micros.length;i++){
-          this.micros[i].circles = this.createRange(this.micros[i].app);
-        }
-        for(let i=0;i<this.micros.length;i++){
-          this.micros[i].links = this.createLink(this.micros[i].circles);
-        }
+        // for(let i=0;i<this.micros.length;i++){
+        //   this.micros[i].circles = this.createRange(this.micros[i].app);
+        // }
+        // for(let i=0;i<this.micros.length;i++){
+        //   this.micros[i].links = this.createLink(this.micros[i].circles);
+        // }
+        this.setView(this.micros);
       }
 
       //data => this.micros.push(data)
@@ -53,11 +54,27 @@ export class MicroListComponent implements OnInit {
     this.apiService.get<Micro[]>(`${this.apiUrl}${this.offset}`).subscribe(
       data => {
         data.forEach(d => {this.micros.push(d)});
+
+        this.setView(this.micros);
+
         if(this.micros.length <= this.offset){
           this.isEnd = true;
         }
       }
     );
+  }
+
+  setView(data){
+    for(let i=0;i<data.length;i++){
+      if( !data[i].circles ){
+        data[i].circles = this.createRange(this.micros[i].app);
+      }
+    }
+    for(let i=0;i<data.length;i++){
+      if( !data[i].links ){
+        data[i].links = this.createLink(this.micros[i].circles);
+      }
+    }
   }
 
   createRange(number){

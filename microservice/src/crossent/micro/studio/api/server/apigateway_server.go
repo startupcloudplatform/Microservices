@@ -1,21 +1,21 @@
 package server
 
 import (
-	"strconv"
-	"fmt"
-	"encoding/json"
-	"crossent/micro/studio/domain"
-	"net/http"
-	"github.com/containous/traefik/types"
-	"time"
-	"strings"
-	"io/ioutil"
-	"io"
-	"code.cloudfoundry.org/lager"
 	"bytes"
-	"encoding/base64"
+	"code.cloudfoundry.org/lager"
+	"crossent/micro/studio/domain"
 	"crypto/tls"
+	"encoding/base64"
+	"encoding/json"
+	"fmt"
+	"github.com/containous/traefik/types"
 	"golang.org/x/crypto/bcrypt"
+	"io"
+	"io/ioutil"
+	"net/http"
+	"strconv"
+	"strings"
+	"time"
 )
 
 func (s *Server) ListMicroserviceApi(w http.ResponseWriter, r *http.Request) {
@@ -542,9 +542,23 @@ func (s *Server) GetMicroserviceApi(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(microApi)
+}
 
+func (s *Server) GetMicroserviceApiUserList(w http.ResponseWriter, r *http.Request) {
+	logger := s.logger.Session("apigateway")
+	logger.Debug("GetMicroserviceApiUserList")
 
+	id := r.FormValue(":id")
+	idint, _ := strconv.Atoi(id)
 
+	microid := r.URL.Query().Get("microId")
+	microidint, _ := strconv.Atoi(microid)
+
+	microApi, err := s.repositoryFactory.Apigateway().GetMicroserviceAppApi(microidint, idint)
+
+	if err == nil {
+		logger.Debug(microApi.UserName)
+	}
 }
 
 
@@ -657,12 +671,16 @@ func (s *Server) GetMicroserviceApiSwagger(w http.ResponseWriter, r *http.Reques
 	idint, _ := strconv.Atoi(id)
 	view, err := s.repositoryFactory.View().GetMicroservice(idint)
 
+	/*
+	//swagger의 경우에는 모든 사용자가 API를 확인할 수 있어야함.
 	if b := s.access(r, view.SpaceGuid); !b {
 		logger.Error("no auth", fmt.Errorf("no auth"))
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte("no auth"))
 		return
 	}
+	*/
+
 
 	if err != nil {
 		logger.Error("failed GetMicroservice", err)
@@ -749,14 +767,34 @@ func (s *Server) SaveMicroserviceApiSwagger(w http.ResponseWriter, r *http.Reque
 
 }
 
-func (s *Server) ListMicroserviceAppApi(w http.ResponseWriter, r *http.Request) {
+func (s *Server) ListMicroserviceAppApiByMicroID(w http.ResponseWriter, r *http.Request) {
 	logger := s.logger.Session("apigateway")
-	logger.Debug("ListMicroserviceAppApi")
+	logger.Debug("ListMicroserviceAppApiByMicroID")
 
 	id := r.FormValue(":id")
 
 	idint, _ := strconv.Atoi(id)
-	microApis, err := s.repositoryFactory.Apigateway().ListMicroserviceAppApi(idint)
+	microApis, err := s.repositoryFactory.Apigateway().ListMicroserviceAppApiByMicroID(idint)
+
+	if err != nil {
+		logger.Error("GetMicroserviceApi err", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(microApis)
+}
+
+func (s *Server) ListMicroserviceAppApiByApiID(w http.ResponseWriter, r *http.Request) {
+	logger := s.logger.Session("apigateway")
+	logger.Debug("ListMicroserviceAppApiByApiID")
+
+	apiId := r.FormValue(":id")
+
+	apiIdInt, _ := strconv.Atoi(apiId)
+	microApis, err := s.repositoryFactory.Apigateway().ListMicroserviceAppApiByApiID(apiIdInt)
 
 	if err != nil {
 		logger.Error("GetMicroserviceApi err", err)
@@ -768,8 +806,8 @@ func (s *Server) ListMicroserviceAppApi(w http.ResponseWriter, r *http.Request) 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(microApis)
 
-
 }
+
 
 func (s *Server) GetMicroserviceNameCheck(w http.ResponseWriter, r *http.Request) {
 	logger := s.logger.Session("apigateway")
@@ -791,8 +829,110 @@ func (s *Server) GetMicroserviceNameCheck(w http.ResponseWriter, r *http.Request
 	w.Write([]byte(`{"result":"ok"}`))
 	//json.NewEncoder(w).Encode(microApi)
 
+}
+
+func (s *Server) GetMicroservicePathCheck(w http.ResponseWriter, r *http.Request) {
+	logger := s.logger.Session("apigateway")
+	logger.Debug("GetMicroserviceNameCheck")
+
+	path := r.URL.Query().Get("path")
+
+	result, err := s.repositoryFactory.Apigateway().GetMicroservicePathCheck(path)
+
+	w.WriteHeader(http.StatusOK)
+	w.Header().Set("Content-Type", "application/json")
+
+	if result == false || err != nil {
+		w.Write([]byte(`{"result":"ng"}`))
+		return
+	}
 
 
+	w.Write([]byte(`{"result":"ok"}`))
+	//json.NewEncoder(w).Encode(microApi)
+
+}
+
+func (s *Server) UpdateMicroserviceAppApi(w http.ResponseWriter, r *http.Request) {
+	logger := s.logger.Session("apigateway")
+	logger.Debug("UpdateMicroserviceAppApi")
+
+	var microApi domain.MicroApi
+	err := json.NewDecoder(r.Body).Decode(&microApi)
+	if err != nil {
+		logger.Error("Decode err", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	// path가 존재하지 않으면, 새로 api 추가하는 경우
+	if strings.Contains(microApi.Path, "/") {
+		microApiRule, err := s.repositoryFactory.Apigateway().GetMicroserviceApiRule()
+		if err != nil {
+			logger.Error("GetMicroserviceApiRule err", err)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		appApi, err := s.repositoryFactory.Apigateway().GetMicroserviceAppApi(microApi.MicroId, microApi.ID)
+		if microApiRule.Rule != "" {
+			var config types.Configuration
+			// apiRule을 저장
+			err = json.Unmarshal([]byte(microApiRule.Rule), &config)
+			if err != nil {
+				logger.Error("json Unmarshal err", err)
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+
+			frontend := config.Frontends[microApi.Name]
+			if frontend != nil {
+				hash, err := hashBcrypt(microApi.Userpassword)
+				if err != nil {
+					logger.Error("hashBcrypt error", err)
+					http.Error(w, err.Error(), http.StatusInternalServerError)
+					return
+				}
+
+				for index, auth := range frontend.BasicAuth {
+					user := strings.Split(auth, ":")
+					if user[0] == appApi.UserName {
+						frontend.BasicAuth = append(frontend.BasicAuth[:index], frontend.BasicAuth[index+1:]...)
+						frontend.BasicAuth = append(frontend.BasicAuth, fmt.Sprintf("%s:%s", microApi.Username, hash))
+					}
+				}
+
+				jsonConfig, err := json.Marshal(config)
+				if err != nil {
+					logger.Error("json marshal err", err)
+					http.Error(w, err.Error(), http.StatusInternalServerError)
+					return
+				}
+
+				microApi.Rule = string(jsonConfig)
+				if err = s.traefikApiPut(microApi.Rule, logger); err != nil {
+					logger.Error("traefikApiPut err", err)
+					http.Error(w, err.Error(), http.StatusInternalServerError)
+					return
+				}
+
+				err = s.repositoryFactory.Apigateway().SaveMicroserviceApiRule(microApi)
+				if err != nil {
+					logger.Error("failed CreateMicroserviceApi", err)
+					w.WriteHeader(http.StatusInternalServerError)
+					json.NewEncoder(w).Encode(err)
+					return
+				}
+			}
+		}
+	} else {
+		logger.Error("There is no path while update is in progress.", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(err)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(microApi)
 }
 
 func (s *Server) CreateMicroserviceAppApi(w http.ResponseWriter, r *http.Request) {
@@ -847,7 +987,7 @@ func (s *Server) CreateMicroserviceAppApi(w http.ResponseWriter, r *http.Request
 
 		if microApiRule.Rule != "" {
 			var config types.Configuration
-
+			// apiRule을 저장
 			err = json.Unmarshal([]byte(microApiRule.Rule), &config)
 			if err != nil {
 				logger.Error("json Unmarshal err", err)
@@ -866,8 +1006,6 @@ func (s *Server) CreateMicroserviceAppApi(w http.ResponseWriter, r *http.Request
 				//		return
 				//	}
 				//}
-
-
 				hash, err := hashBcrypt(microApi.Userpassword)
 				if err != nil {
 					logger.Error("hashBcrypt error", err)
@@ -900,19 +1038,13 @@ func (s *Server) CreateMicroserviceAppApi(w http.ResponseWriter, r *http.Request
 					json.NewEncoder(w).Encode(err)
 					return
 				}
-
 			}
 		}
 	}
 
-
-
-
 	w.WriteHeader(http.StatusOK)
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(microApi)
-
-
 }
 
 
@@ -1066,7 +1198,7 @@ func (s *Server) DeleteMicroserviceApi(w http.ResponseWriter, r *http.Request) {
 
 
 }
-
+/// 마이크로 서비스 수정 화면에서 삭제
 func (s *Server) DeleteMicroserviceAppApi(w http.ResponseWriter, r *http.Request) {
 	logger := s.logger.Session("apigateway")
 	logger.Debug("DeleteMicroserviceAppApi")
@@ -1074,9 +1206,10 @@ func (s *Server) DeleteMicroserviceAppApi(w http.ResponseWriter, r *http.Request
 	id := r.FormValue(":id")
 	idint, _ := strconv.Atoi(id)
 
-	microid := r.URL.Query().Get("microid")
+	microid := r.URL.Query().Get("microId")
 	microidint, _ := strconv.Atoi(microid)
 
+	microname := r.URL.Query().Get("microName")
 	//view, err := s.repositoryFactory.View().GetMicroservice(idint)
 	//
 	//if b := s.access(r, view.SpaceGuid); !b {
@@ -1093,8 +1226,80 @@ func (s *Server) DeleteMicroserviceAppApi(w http.ResponseWriter, r *http.Request
 	//	return
 	//}
 
+	// 20200131 -- s.repositoryFactory.Apigateway().GetMicroserviceApiRule()
+	// 20200131 -- s.repositoryFactory.Apigateway().SaveMicroserviceApiRule
 
-	err := s.repositoryFactory.Apigateway().DeleteMicroserviceAppApi(idint, microidint)
+	// 1. micro_api_rule에서 rule을 조회
+	microApiRule, err := s.repositoryFactory.Apigateway().GetMicroserviceApiRule()
+	if err != nil {
+		logger.Error("GetMicroserviceApiRule err", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	fmt.Println(microApiRule.Active)
+	// 2. micro_app_api 로 부터 username을 알아낸다.
+	appApi, err := s.repositoryFactory.Apigateway().GetMicroserviceAppApi(microidint, idint)
+	fmt.Println(appApi.Active)
+
+	// 3. frontend.BasioAuth에서 id값에 맞는 걸 제거
+	if microApiRule.Rule != "" {
+
+		var config types.Configuration
+		// apiRule을 저장
+		err = json.Unmarshal([]byte(microApiRule.Rule), &config)
+		if err != nil {
+			logger.Error("json Unmarshal err", err)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		frontend := config.Frontends[microname]
+
+		indexCorrect :=0
+		if frontend != nil {
+			for index, auth := range frontend.BasicAuth {
+				user := strings.Split(auth, ":")
+				if user[0] == appApi.UserName {
+			//		logger.Debug("duplicate user")
+			//		http.Error(w, "duplicate user", http.StatusInternalServerError)
+			//		return
+					frontend.BasicAuth = append(frontend.BasicAuth[:(index-indexCorrect)], frontend.BasicAuth[(index-indexCorrect)+1:]...)
+					indexCorrect++
+				}
+			}
+			microApi := domain.MicroApi{}
+
+			//frontend.BasicAuth = append(frontend.BasicAuth, fmt.Sprintf("%s:%s", microApi.Username, hash))
+
+			jsonConfig, err := json.Marshal(config)
+			if err != nil {
+				logger.Error("json marshal err", err)
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+
+			microApi.Rule = string(jsonConfig)
+
+			if err = s.traefikApiPut(microApi.Rule, logger); err != nil {
+				logger.Error("traefikApiPut err", err)
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+
+			err = s.repositoryFactory.Apigateway().SaveMicroserviceApiRule(microApi)
+
+			if err != nil {
+				logger.Error("failed CreateMicroserviceApi", err)
+				w.WriteHeader(http.StatusInternalServerError)
+				json.NewEncoder(w).Encode(err)
+				return
+			}
+
+		}
+	}
+
+
+	err = s.repositoryFactory.Apigateway().DeleteMicroserviceAppApi(idint, microidint, appApi.UserName)
 
 	if err != nil {
 		logger.Error("failed DeleteMicroserviceApi", err)
@@ -1108,8 +1313,6 @@ func (s *Server) DeleteMicroserviceAppApi(w http.ResponseWriter, r *http.Request
 	w.Header().Set("Content-Type", "application/json")
 	//json.NewEncoder(w).Encode(view.Swagger)
 	//w.Write([]byte(view.Swagger))
-
-
 }
 
 func (s *Server) traefikApiPut(rule string, logger lager.Logger) error {

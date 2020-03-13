@@ -78,6 +78,7 @@ export class D3ViewService{
           d['fy'] = d3.event.y;
         }))
       .on("mouseover", function(d) {
+
         if(d['cpu'] != '') {
           div.transition()
             .duration(200)
@@ -92,13 +93,15 @@ export class D3ViewService{
           .duration(10)
           .style("opacity", 0);
       })
+
       .on("click", function(d) {
-        simulation.stop();
+        // simulation.stop();
         if (d['type'] == 'API' && d['active'] != 'extended') {
           d['active'] = 'extended';
-          ee.emit(d['id']);
+          // ee.emit(d['id']);
         }
       });
+
     // .on("end", function (d) {
     //   if (!d3.event.active) simulation.alphaTarget(0);
     //   d['fx'] = null;

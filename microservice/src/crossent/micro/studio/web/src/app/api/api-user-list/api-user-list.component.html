@@ -1,0 +1,77 @@
+<h2 class="ui dividing header">
+  <div class="ui big breadcrumb">
+    <div class="active section">마이크로서비스 API 유저 관리</div>
+  </div>
+</h2>
+
+
+<div class="ui main">
+  <div class="box-wrap">
+    <div class="column">
+      <div class="ui form dropdown">
+        <div class="inline field">
+          <label>API명</label>
+          <input class="ui search dropdown" readonly value ="{{apiName}}" >
+
+          <!--
+          {{apiName}}
+          select class="ui search dropdown">
+            <option>
+            </option>
+          </select-->
+        </div>
+      </div>
+      <div class="ui form dropdown">
+        <div class="inline field">
+          <label>PATH</label>
+          <input class="ui search dropdown"  readonly value ="{{apiPath}}" >
+        </div>
+      </div>
+      <!--
+      <div class="ui icon input">
+        <input placeholder="Name을 입력하세요." type="text" >
+        <i class="search icon"></i>
+      </div>
+      <div class="ui icon input">
+        <input placeholder="Path를 입력하세요." type="text" >
+        <i class="search icon"></i>
+      </div>
+      <a class="ui right floated primary button white-btn add-btn submit">
+        등록
+      </a>
+      -->
+
+      <table class="ui fixed single line selectable striped table">
+        <thead>
+        <tr>
+          <th>#</th>
+          <th>BasicAuth ID</th>
+          <th>BasicAuth PW</th>
+          <th>사용중인 마이크로서비스</th>
+          <th></th>
+          <th></th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr *ngFor="let microapi of (microapis); let i = index;">
+          <td>{{i+1}}</td>
+          <td>{{microapi.username}}</td>
+          <td>****</td>
+          <td>{{microapi.microname}}</td>
+          <td></td>
+          <td></td>
+        </tr>
+        </tbody>
+      </table>
+
+      <div class="ui stackable grid">
+        <div class="column">
+          <button class="fluid ui button">
+            <i class="icon angle down"></i>
+            more
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

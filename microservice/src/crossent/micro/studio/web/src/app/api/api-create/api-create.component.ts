@@ -36,6 +36,7 @@ export class ApiCreateComponent implements OnInit {
   id: string;
   isId: boolean = false;
   isNameValid: boolean = true;
+  isPathValid: boolean = true;
   orgs: Org[];
   isFirst: boolean = true;
   isSecond: boolean = false;
@@ -167,11 +168,24 @@ export class ApiCreateComponent implements OnInit {
     if(form.controls['name'].valid == true && form.controls['name'].valid != false){
       this.apiService.get<any>(`${this.apiUrl}/name/check?name=`+this.microapi.name).subscribe(
         data => {
-          console.log(data)
           if(data.result == 'ok') {
             this.isNameValid = true
           }else{
             this.isNameValid = false
+          }
+        }
+      );
+    }
+  }
+
+  PathNext(form : NgForm) {
+    if(form.controls['path'].valid == true && form.controls['path'].valid != false){
+      this.apiService.get<any>(`${this.apiUrl}/path/check?path=`+this.microapi.path).subscribe(
+        data => {
+          if(data.result == 'ok') {
+            this.isPathValid = true
+          }else{
+            this.isPathValid = false
           }
         }
       );

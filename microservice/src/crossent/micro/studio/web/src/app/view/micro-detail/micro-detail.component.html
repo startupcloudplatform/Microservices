@@ -55,6 +55,25 @@
                   </div>
                 </div>
               </div>
+              <!--       Add       -->
+              <div class="two column row">
+                <div class="column">
+                  <div class="ui message">
+                    <div class="header">
+                      조직
+                    </div>
+                    <p>{{micro.orgName}}</p>
+                  </div>
+                </div>
+                <div class="column">
+                  <div class="ui message">
+                    <div class="header">
+                      영역
+                    </div>
+                    <p>{{micro.spaceName}}</p>
+                  </div>
+                </div>
+              </div>
             </div>
 
             <div class="ui grid">
@@ -180,8 +199,8 @@
                 <th>Status</th>
               </tr>
               </thead>
-              <tbody>
-              <tr *ngFor="let app of (apps)">
+              <tbody *ngFor="let app of (apps)">
+              <tr *ngIf="app.appName">
                 <td>{{app.appName}}</td>
                 <td>{{app.url}}</td>
                 <td>{{app.app}}</td>
@@ -387,7 +406,7 @@
   </div>
 
   <div class="ui stackable grid"  style="padding-bottom: 20px;">
-    <div class="sixteen wide column" id="monitoring">
+    <!--div class="sixteen wide column" id="monitoring"> 사용하지 않음.
       <div class="ui styled fluid accordion">
         <div class="title">
           <i class="dropdown icon"></i>
@@ -406,7 +425,7 @@
           </div>
         </div>
       </div>
-    </div>
+    </div-->
   </div>
 
 </div>

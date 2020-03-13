@@ -43,6 +43,7 @@ export class ApiViewComponent implements OnInit {
 
   getSwagger() {
     if (this.isIframe == false && this.microapi) {
+      console.log(this.swaggerApiUrl);
       this.iframeSrc = this.sanitizer.bypassSecurityTrustResourceUrl(this.swaggerApiUrl + '/entry/?id=' + this.microapi.microId + '&domain=' + this.api);
     }
     this.isIframe = !this.isIframe;

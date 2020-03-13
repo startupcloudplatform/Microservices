@@ -19,7 +19,6 @@
     </div>
 
     <div class="ui tab active" data-tab="first">
-
       <div class="column">
 
         <h3 class="ui header">JAVA 버전</h3>
@@ -34,6 +33,8 @@
         <h3 class="ui header">manifest.yml</h3>
         <p>PAAS-TA를 통해 앱을 push 할때 사용하는 설정파일</p>
         <p>필수 환경설정변수 : msa </p>
+        <p>옵션 환경설정변수 : private </p>
+        <p>--- 공개하고 싶지 않은 경우에는 private값으로 자신의 계정 정보를 입력 </p>
         <div class="ui floating message">
           <pre>
 ---
@@ -42,7 +43,9 @@ applications:
     memory: 1G
     path: target/front-0.0.1-SNAPSHOT.jar
     env:
-      <b>msa: yes</b></pre>
+      <b>msa: yes
+      private: test
+      </b></pre>
         </div>
 
         <div class="ui divider"></div>
@@ -67,11 +70,21 @@ applications:
 
         <div class="ui divider"></div>
 
-        <h3 class="ui header">application.properties</h3>
-        <p>src/main/resources/application.properties</p>
+        <h3 class="ui header">bootstrap.properties</h3>
+        <p>src/main/resources/bootstrap.properties</p>
         <div class="ui floating message">
         <pre>
 spring.application.name=영문앱이름</pre>
+        </div>
+
+        <div class="ui divider"></div>
+
+        <h3 class="ui header">application.properties</h3>
+        <p>src/main/resources/application.properties</p>
+        <div class="ui floating message">
+          <pre>
+            {{application_properties}}
+          </pre>
         </div>
 
       </div>
@@ -172,6 +185,7 @@ spring.session.store-type=redis
 spring.profiles.active=cloud
           </pre>
         </div>
+
       </div>
     </div>
 

@@ -35,17 +35,23 @@ const (
 
 	ListMicroserviceApi = "ListMicroserviceApi"
 	GetMicroserviceApi = "GetMicroserviceApi"
+	// --gy
+	GetMicroserviceApiUserList = "GetMicroserviceApiUserList"
+
 	GetMicroserviceApiSwagger = "GetMicroserviceApiSwagger"
 	SaveMicroserviceApiSwagger = "SaveMicroserviceApiSwagger"
 	GetMicroserviceApiRule = "GetMicroserviceApiRule"
 	CreateMicroserviceApi = "CreateMicroserviceApi"
 	CreateMicroserviceAppApi = "CreateMicroserviceAppApi"
 	DeleteMicroserviceAppApi = "DeleteMicroserviceAppApi"
-	ListMicroserviceAppApi = "ListMicroserviceAppApi"
+	UpdateMicroserviceAppApi = "UpdateMicroserviceAppApi"
+	ListMicroserviceAppApiByMicroID = "ListMicroserviceAppApiByMicroID"
+	ListMicroserviceAppApiByApiID = "ListMicroserviceAppApiByApiID"
 	DeleteMicroserviceApi = "DeleteMicroserviceApi"
 	ListMicroserviceFrontend = "ListMicroserviceFrontend"
 	ListMicroserviceApiHealth = "ListMicroserviceApiHealth"
 	GetMicroserviceNameCheck = "GetMicroserviceNameCheck"
+	GetMicroservicePathCheck = "GetMicroservicePathCheck"
 
 	//ListMicroserviceApi = "ListMicroserviceApi"
 	//GetMicroserviceApi = "GetMicroserviceApi"
@@ -93,16 +99,19 @@ var Routes = rata.Routes([]rata.Route{
 	{Path: "/api/v1/apigateway", Method: "GET", Name: ListMicroserviceApi},
 	{Path: "/api/v1/apigateway", Method: "POST", Name: CreateMicroserviceApi},
 	{Path: "/api/v1/apigateway/:id", Method: "GET", Name: GetMicroserviceApi},
+	{Path: "/api/v1/apigateway/:id/testb", Method: "GET", Name: ListMicroserviceAppApiByApiID},
 	{Path: "/api/v1/apigateway/:id/rule", Method: "GET", Name: GetMicroserviceApiRule},
 	{Path: "/api/v1/apigateway/:id/swagger", Method: "GET", Name: GetMicroserviceApiSwagger},
 	{Path: "/api/v1/apigateway/:id/swagger", Method: "POST", Name: SaveMicroserviceApiSwagger},
-	{Path: "/api/v1/apigateway/:id/api", Method: "GET", Name: ListMicroserviceAppApi},
+	{Path: "/api/v1/apigateway/:id/api", Method: "GET", Name: ListMicroserviceAppApiByMicroID},
 	{Path: "/api/v1/apigateway/:id/api", Method: "POST", Name: CreateMicroserviceAppApi},
+	{Path: "/api/v1/apigateway/:id/api", Method: "PUT", Name: UpdateMicroserviceAppApi},
 	{Path: "/api/v1/apigateway/:id/api", Method: "DELETE", Name: DeleteMicroserviceAppApi},
 	{Path: "/api/v1/apigateway/:id", Method: "DELETE", Name: DeleteMicroserviceApi},
 	{Path: "/api/v1/apigateway/frontend/microservices", Method: "GET", Name: ListMicroserviceFrontend},
 	{Path: "/api/v1/apigateway/health/microservices", Method: "GET", Name: ListMicroserviceApiHealth},
 	{Path: "/api/v1/apigateway/name/check", Method: "GET", Name: GetMicroserviceNameCheck},
+	{Path: "/api/v1/apigateway/path/check", Method: "GET", Name: GetMicroservicePathCheck},
 
 	//{Path: "/api/v1/microservices/api/list", Method: "GET", Name: ListMicroserviceApi},
 	//{Path: "/api/v1/microservices/:id/api", Method: "GET", Name: GetMicroserviceApi},

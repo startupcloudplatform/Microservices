@@ -13,12 +13,13 @@ import { SearchApiFilterPipe } from './api-list/search-filter.pipe';
 import { ApiavatarComponent } from './apiavatar/apiavatar.component';
 import { BarChartComponent } from './api-health/bar-chart/bar-chart.component';
 import { LineChartComponent } from './api-health/line-chart/line-chart.component';
+import {ApiUserListComponent} from "./api-user-list/api-user-list.component";
 
 @NgModule({
   imports: [
     FormsModule, CommonModule, RouterModule
   ],
-  declarations: [ApiListComponent, ApiCreateComponent, ApiViewComponent, ApiHealthComponent, ApiManageComponent, CodeFilterPipe, SearchApiFilterPipe, ApiavatarComponent, BarChartComponent, LineChartComponent],
+  declarations: [ApiUserListComponent, ApiListComponent, ApiCreateComponent, ApiViewComponent, ApiHealthComponent, ApiManageComponent, CodeFilterPipe, SearchApiFilterPipe, ApiavatarComponent, BarChartComponent, LineChartComponent],
   providers: [ PartService ],
   exports: [ApiavatarComponent, CodeFilterPipe, SearchApiFilterPipe]
 })

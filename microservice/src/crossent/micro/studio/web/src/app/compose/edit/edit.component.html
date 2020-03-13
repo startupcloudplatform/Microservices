@@ -1,450 +1,462 @@
-<h2 class="ui dividing header">
-  <div class="ui big breadcrumb">
-    <a class="section" routerLink="/list">마이크로서비스 목록</a>
-    <div class="divider"> / </div>
-    <a class="section" routerLink="/detail/{{micro.id}}">마이크로서비스 상세</a>
-    <div class="divider"> / </div>
-    <div class="active section">마이크로서비스 수정</div>
-  </div>
+<h2 class="ui dividing header" xmlns:cursor="http://www.w3.org/1999/xhtml">
+	<div class="ui big breadcrumb">
+		<a class="section" routerLink="/list">마이크로서비스 목록</a>
+		<div class="divider"> / </div>
+		<a class="section" routerLink="/detail/{{micro.id}}">마이크로서비스 상세</a>
+		<div class="divider"> / </div>
+		<div class="active section">마이크로서비스 수정</div>
+	</div>
 </h2>
 
 <div class="ui main container fluid">
 
-  <div class="ui stackable grid">
-    <div class="fifteen wide column">
-      <div class="box-wrap">
+	<div class="ui stackable grid">
+		<div class="fifteen wide column">
+			<div class="box-wrap">
 
-        <div class="ui fluid">
-          <div class="title">
-            <form class="ui form">
-              <div class="fields">
-                <div class="seven wide field">
-                  <label>Name</label>
-                  <input type="text" [(ngModel)]="micro.name" name="name" #name="ngModel" maxlength="20" placeholder="Name" readonly>
-                </div>
-                <div class="six wide field">
-                  <label>Version</label>
-                  <input type="text" [(ngModel)]="micro.version" name="version" #version="ngModel"  maxlength="20" placeholder="Version">
-                </div>
-                <div class="three wide field" style='display:none'>
-                  <label>Visibility</label>
-                  <select class="ui fluid dropdown"
-                          required
-                          [(ngModel)]="micro.visible" name="visible" #visible="ngModel">
-                    <option value="true">public</option>
-                    <option value="false">private</option>
-                  </select>
-                </div>
-              </div>
-            </form>
-          </div>
-        </div>
-        <h4 class="ui top attached block header">
-          <div class="ui icon" data-tooltip="확대" data-inverted="" (click)="zoom('in')">
-            <i class="bordered tiny blue plus link icon"></i>
-          </div>
-          <div class="ui icon" data-tooltip="축소" data-inverted="" (click)="zoom('out')">
-            <i class="bordered tiny blue minus link icon"></i>
-          </div>
-          <div class="ui icon" data-tooltip="저장" data-inverted="" (click)="save()">
-            <i class="bordered tiny red save link icon"></i>
-          </div>
-          <div class="ui icon" data-tooltip="시작" data-inverted="" *ngIf="micro.status=='STOPPED'" (click)="start()">
-            <i class="bordered tiny blue play link icon"></i>
-          </div>
-          <div class="ui icon" data-tooltip="정지" data-inverted="" *ngIf="micro.status=='STARTED'" (click)="stop()">
-            <i class="bordered tiny red stop link icon"></i>
-          </div>
-          <div class="ui icon" data-tooltip="삭제" data-inverted=""  (click)="delete()">
-            <i class="bordered tiny red trash link icon"></i>
-          </div>
-        </h4>
-        <div class="ui bottom attached segment" style="padding: 0">
-          <div id="chart" class="row" style="width:100%; height:650px;">
-            <svg #svg id="dropzone" width="100%" height="100%" appDroppable [droppedNodes]="nodes" [msaName]="micro.name">
-              <filter id="dropShadow" width="120%" height="140%">
-                <feGaussianBlur in="SourceAlpha" stdDeviation="2" />
-                <feOffset dx="2" dy="4" />
-                <feMerge>
-                  <feMergeNode />
-                  <feMergeNode in="SourceGraphic" />
-                </feMerge>
-              </filter>
-              <defs>
-                <marker id="end-arrow" viewBox="0 -5 10 10" refX="34" markerWidth="3.5" markerHeight="3.5" orient="auto">
-                  <path d="M0,-5L10,0L0,5" />
-                </marker>
-                <marker id="mark-end-arrow" viewBox="0 -5 10 10" refX="7" markerWidth="3.5" markerHeight="3.5" orient="auto">
-                  <path d="M0,-5L10,0L0,5" />
-                </marker>
-              </defs>
-              <g [zoomableOf]="svg">
-                <g [linkPath]="link" *ngFor="let link of links" class="g-link-path" [attr.id]="'link-'+link.id" (clickPath)="getLink($event)"></g>
-                <g *ngFor="let node of nodes">
-                  <g *ngIf="node.shape=='circle'" [nodeCircle]="node" (clickInfo)="infoNode($event)" (clickRemove)="removeNode($event)"
-                     [draggableNode]="node" [droppedNodes]="nodes" [linkPaths]="links" [attr.id]="node.id"></g>
-                  <g *ngIf="node.shape=='rect'" [nodeRect]="node" (clickInfo)="infoNode($event)" (clickRemove)="removeNode($event)"
-                     [draggableNode]="node" [droppedNodes]="nodes" [linkPaths]="links" [attr.id]="node.id"></g>
-                </g>
-              </g>
-            </svg>
-          </div>
-        </div>
+				<div class="ui fluid">
+					<div class="title">
+						<form class="ui form">
+							<div class="fields">
+								<div class="six wide field">
+									<label>Organization/Space</label>
+									<input type="text" [value]="orgSpace" name="org" placeholder="Organization/Space" readonly>
+								</div>
+								<div class="seven wide field">
+									<label>Name</label>
+									<input type="text" [(ngModel)]="micro.name" name="name" #name="ngModel" maxlength="20" placeholder="Name" readonly>
+								</div>
+								<div class="three wide field">
+									<label>Version</label>
+									<input type="text" [(ngModel)]="micro.version" name="version" #version="ngModel"  maxlength="20" placeholder="Version">
+								</div>
+<!--								<div class="three wide field" style='display:none'>-->
+<!--									<label>Visibility</label>-->
+<!--									<select class="ui fluid dropdown"-->
+<!--													required-->
+<!--													[(ngModel)]="micro.visible" name="visible" #visible="ngModel">-->
+<!--										<option value="true">public</option>-->
+<!--										<option value="false">private</option>-->
+<!--									</select>-->
+<!--								</div>-->
+							</div>
+						</form>
+					</div>
+				</div>
+				<h4 class="ui top attached block header">
+					<div class="ui icon" data-tooltip="확대" data-inverted="" (click)="zoom('in')">
+						<i class="bordered tiny blue plus link icon"></i>
+					</div>
+					<div class="ui icon" data-tooltip="축소" data-inverted="" (click)="zoom('out')">
+						<i class="bordered tiny blue minus link icon"></i>
+					</div>
+					<div class="ui icon" data-tooltip="저장" data-inverted="" (click)="save()">
+						<i class="bordered tiny red save link icon"></i>
+					</div>
+					<div class="ui icon" data-tooltip="시작" data-inverted="" *ngIf="micro.status=='STOPPED'" (click)="start()">
+						<i class="bordered tiny blue play link icon"></i>
+					</div>
+					<div class="ui icon" data-tooltip="정지" data-inverted="" *ngIf="micro.status=='STARTED'" (click)="stop()">
+						<i class="bordered tiny red stop link icon"></i>
+					</div>
+					<div class="ui icon" data-tooltip="삭제" data-inverted=""  (click)="delete()">
+						<i class="bordered tiny red trash link icon"></i>
+					</div>
+				</h4>
+				<div class="ui bottom attached segment" style="padding: 0">
+					<div id="chart" class="row" style="width:100%; height:650px;margin-left:0;">
+						<svg #svg id="dropzone" width="100%" height="100%" appDroppable [droppedNodes]="nodes" [msaName]="micro.name">
+							<filter id="dropShadow" width="120%" height="140%">
+								<feGaussianBlur in="SourceAlpha" stdDeviation="2" />
+								<feOffset dx="2" dy="4" />
+								<feMerge>
+									<feMergeNode />
+									<feMergeNode in="SourceGraphic" />
+								</feMerge>
+							</filter>
+							<defs>
+								<marker id="end-arrow" viewBox="0 -5 10 10" refX="34" markerWidth="3.5" markerHeight="3.5" orient="auto">
+									<path d="M0,-5L10,0L0,5" />
+								</marker>
+								<marker id="mark-end-arrow" viewBox="0 -5 10 10" refX="7" markerWidth="3.5" markerHeight="3.5" orient="auto">
+									<path d="M0,-5L10,0L0,5" />
+								</marker>
+							</defs>
+							<g [zoomableOf]="svg">
+								<g [linkPath]="link" *ngFor="let link of links" class="g-link-path" [attr.id]="'link-'+link.id" (clickPath)="getLink($event)"></g>
+								<g *ngFor="let node of nodes">
+									<g *ngIf="node.shape=='circle'" [nodeCircle]="node" (clickInfo)="infoNode($event)" (clickRemove)="removeNode($event)"
+										 [draggableNode]="node" [droppedNodes]="nodes" [linkPaths]="links" [attr.id]="node.id"></g>
+									<g *ngIf="node.shape=='rect'" [nodeRect]="node" (clickInfo)="infoNode($event)" (clickRemove)="removeNode($event)"
+										 [draggableNode]="node" [droppedNodes]="nodes" [linkPaths]="links" [attr.id]="node.id"></g>
+								</g>
+							</g>
+						</svg>
+					</div>
+				</div>
 
-      </div>
-    </div>
-    <div class="five wide column" id="accordion" [hidden]="!accordion">
-      <div class="ui tab" data-tab="app">
-        <div class="ui top attached message">
-          <i class="close icon" (click)="closeMenu()"></i>
-          <h4 class="ui header">
-            App
-          </h4>
-        </div>
-        <div class="ui bottom attached segment">
-          <div class="ui small icon input" style="width:100%;">
-            <input type="text" placeholder="Search Apps..." [(ngModel)]="searchAppName" (keyup.enter)="searchApps(searchAppName)">
-            <i class="search icon" (click)="searchApps(searchAppName)"></i>
-          </div>
-          <table class="ui celled table center aligned">
-            <thead>
-            <tr>
-              <th>Name</th>
-              <th>Status</th>
-            </tr>
-            </thead>
-            <tbody>
-            <tr *ngFor="let app of marketApps">
-              <td><p [attr.id]="app.id" [appDraggable]="app" data-shape="circle" data-color="rgb(155,208,198)" data-type="App" class="drag-item">{{ app.name }}</p></td>
-              <td>{{ app.state }}</td>
-            </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-      <div class="ui tab" data-tab="service">
-        <div class="ui top attached message">
-          <i class="close icon" (click)="closeMenu()"></i>
-          <h4 class="ui header">
-            Service
-          </h4>
-        </div>
-        <div class="ui bottom attached segment">
-          <div class="ui small icon input" style="width:100%;">
-            <input type="text" placeholder="Search Services..." [(ngModel)]="searchServiceName" (keyup.enter)="searchServices(searchServiceName)">
-            <i class="search icon" (click)="searchServices(searchServiceName)"></i>
-          </div>
-          <table class="ui celled table center aligned">
-            <thead>
-            <tr>
-              <th>Label</th>
-            </tr>
-            </thead>
-            <tbody>
-            <tr *ngFor="let service of marketServices">
-              <td><p [attr.id]="service.id" [appDraggable]="service" data-shape="circle" data-color="rgb(177,130,186)" data-type="Service" class="drag-item">{{ service.label }}</p></td>
-            </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-      <div class="ui tab" data-tab="network">
-        <div class="ui top attached message">
-          <i class="close icon" (click)="closeMenu()"></i>
-          <h4 class="ui header">
-            Network
-          </h4>
-        </div>
-        <div class="ui bottom attached segment">
-          <form class="ui form">
-            <div class="field">
-              <label>Source</label>
-              <input type="text" name="source" placeholder="Source" [value]="viewNetwork.source.name" readonly>
-            </div>
-            <div class="field">
-              <label>Target</label>
-              <input type="text" name="target" placeholder="Target" [value]="viewNetwork.target.name" readonly>
-            </div>
-            <div class="field">
-              <label>Protocol</label>
-              <select class="ui search dropdown" name="protocol" [(ngModel)]="viewNetwork.protocol" #protocol="ngModel">
-                <option value="tcp">TCP</option>
-                <option value="udp">UDP</option>
-              </select>
-            </div>
-            <div class="field">
-              <label>Port</label>
-              <input type="text" name="port" placeholder="Port" [(ngModel)]="viewNetwork.port" #port="ngModel">
-            </div>
-            <div class="ui divider"></div>
-            <button class="ui button" (click)="deleteNetwork(viewNetwork)" *ngIf="viewNetwork.source.name != ''">Delete</button>
-          </form>
-        </div>
-      </div>
-      <div class="ui tab" data-tab="routing">
-        <div class="ui top attached message">
-          <i class="close icon" (click)="closeMenu()"></i>
-          <h4 class="ui header">
-            Routing
-          </h4>
-        </div>
-        <div class="ui bottom attached segment">
-          <table class="ui celled table center aligned">
-            <thead>
-            <tr>
-              <th>Service</th>
-              <th>Path</th>
-              <th></th>
-            </tr>
-            </thead>
-            <tbody>
-            <tr *ngFor="let route of routes; let i = index;">
-              <td>
-                <div class="ui input pack">
-                  <input type="text" [(ngModel)]="route.service" name="serviceId{{ i+1 }}" #serviceId="ngModel" placeholder="Service ID">
-                </div>
-              </td>
-              <td>
-                <div class="ui input pack">
-                  <input type="text" [(ngModel)]="route.path" name="path{{ i+1 }}" #path="ngModel" placeholder="Path">
-                </div>
-              </td>
-              <td *ngIf="i==routes.length-1"><i class="plus blue icon" (click)="addRoute()"></i></td>
-              <td *ngIf="i!=routes.length-1"><i class="minus red icon" (click)="removeRoute(route)"></i></td>
-            </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-      <div class="ui tab" data-tab="config">
-        <div class="ui top attached message">
-          <i class="close icon" (click)="closeMenu()"></i>
-          <h4 class="ui header">
-            Config
-          </h4>
-        </div>
-        <div class="ui bottom attached segment">
-          <table class="ui celled table center aligned">
-            <thead>
-            <tr>
-              <th>App</th>
-              <th>Properties</th>
-              <th></th>
-            </tr>
-            </thead>
-            <tbody>
-            <tr *ngFor="let config of configs; let i = index;">
-              <td>
-                <div class="ui input pack">
-                  <input type="text" [(ngModel)]="config.app" name="app{{ i+1 }}" #key="ngModel" placeholder="App">
-                </div>
-              </td>
-              <td>
-                <div class="ui input pack">
-                  <input type="text" [(ngModel)]="config.property" name="property{{ i+1 }}" #value="ngModel" placeholder="Property">
-                </div>
-              </td>
-              <td *ngIf="i==configs.length-1"><i class="plus blue icon" (click)="addConfig()"></i></td>
-              <td *ngIf="i!=configs.length-1"><i class="minus red icon" (click)="deleteConfig(i)"></i></td>
-            </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-      <div class="ui tab" data-tab="api">
-        <div class="ui top attached message">
-          <i class="close icon" (click)="closeMenu()"></i>
-          <h4 class="ui header">
-            API
-          </h4>
-        </div>
-        <div class="ui bottom attached segment">
-          <div class="ui small icon input" style="width:100%;">
-            <input type="text" placeholder="Search APIs..." [(ngModel)]="searchApiName" (keyup.enter)="searchApis(searchApiName)">
-            <i class="search icon" (click)="searchApis(searchApiName)"></i>
-          </div>
-          <table class="ui celled table center aligned">
-            <thead>
-            <tr>
-              <th>Name</th>
-              <th> </th>
-            </tr>
-            </thead>
-            <tbody>
-            <tr *ngFor="let api of Apis">
-              <td>{{ api.name }}</td>
-              <td>
-                <button class="ui icon button" title="추가" (click)="showAddApi(api)">
-                  <i class="plus alternate icon"></i>
-                </button>
-                <button class="ui icon button" title="API" (click)="getSwagger(api)">
-                  <i class="random alternate outline icon"></i>
-                </button>
-              </td>
-            </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-    <div class="one wide column">
-      <div class="ui vertical labeled icon menu" (click)="openMenu($event)">
-        <a class="item" data-tab="app" #tabApp>
-          <i class="cube icon"></i>
-          App
-        </a>
-        <a class="item" data-tab="service" #tabService>
-          <i class="cubes icon"></i>
-          Service
-        </a>
-        <a class="item" data-tab="network" #tabNetwork>
-          <i class="signal icon"></i>
-          Network
-        </a>
-        <a class="item" data-tab="routing" #tabRouting>
-          <i class="map signs icon"></i>
-          Routing
-        </a>
-        <a class="item" data-tab="config" #tabConfig>
-          <i class="write icon"></i>
-          Config
-        </a>
-        <a class="item" data-tab="api" #tabApi>
-          <i class="random icon"></i>
-          API
-        </a>
-      </div>
-    </div>
-  </div>
-  <div class="ui stackable grid"  style="padding-bottom: 20px;">
-    <div class="fifteen wide column">
-      <div class="ui fluid segment">
-        <h4 class="ui top attached block header">
-          <div class="title">
-            <h4 class="ui header">API</h4>
-          </div>
-        </h4>
-        <div class="ui bottom attached segment">
-          <div class="ui stackable four column grid api">
-            <div class="column" *ngFor="let microapi of microapis">
-              <div class="ui big very relaxed horizontal list">
-                <div class="item">
-                  <div class="ui content small image">
-                    <div class="apiavatar" [image]="microapi.image"></div>
-                  </div>
-                  <div class="content">
-                    <i class="close icon" (click)="delAppApi(microapi.id, microapi.microId)"></i>
-                    <a class="header">{{microapi.name}}</a>
-                    <div class="description">
-                      <p>{{microapi.host}} {{microapi.path}}</p>
-                      <div class="ui label" title="사용자">
-                        <i class="user icon"></i> {{microapi.username}}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
+			</div>
+		</div>
+		<div class="five wide column" id="accordion" [hidden]="!accordion">
+			<div class="ui tab" data-tab="app">
+				<div class="ui top attached message">
+					<i class="close icon" (click)="closeMenu()"></i>
+					<h4 class="ui header">
+						App
+					</h4>
+				</div>
+				<div class="ui bottom attached segment app-box">
+					<div class="ui small icon input" style="width:100%;">
+						<input type="text" placeholder="Search Apps..." [(ngModel)]="searchAppName" (keyup.enter)="searchApps(searchAppName)">
+						<i class="search icon" (click)="searchApps(searchAppName)"></i>
+					</div>
+					<h6 class="text-right">Total <span>{{marketApps.length}}</span></h6>
+					<table class="ui celled table center aligned">
+						<thead>
+						<tr>
+							<th>Name</th>
+							<th>Status</th>
+						</tr>
+						</thead>
+						<tbody>
+						<tr *ngFor="let app of marketApps">
+							<td><p [attr.id]="app.id" [appDraggable]="app" data-shape="circle" data-color="rgb(155,208,198)" data-type="App" class="drag-item">{{ app.name }}</p></td>
+							<td>{{ app.state }}</td>
+						</tr>
+						</tbody>
+					</table>
+				</div>
+			</div>
+			<div class="ui tab" data-tab="service">
+				<div class="ui top attached message">
+					<i class="close icon" (click)="closeMenu()"></i>
+					<h4 class="ui header">
+						Service
+					</h4>
+				</div>
+				<div class="ui bottom attached segment">
+					<div class="ui small icon input" style="width:100%;">
+						<input type="text" placeholder="Search Services..." [(ngModel)]="searchServiceName" (keyup.enter)="searchServices(searchServiceName)">
+						<i class="search icon" (click)="searchServices(searchServiceName)"></i>
+					</div>
+					<h6 class="text-right">Total <span>{{marketServices.length}}</span></h6>
+					<table class="ui celled table center aligned">
+						<thead>
+						<tr>
+							<th>Label</th>
+						</tr>
+						</thead>
+						<tbody>
+						<tr *ngFor="let service of marketServices">
+							<td><p [attr.id]="service.id" [appDraggable]="service" data-shape="circle" data-color="rgb(177,130,186)" data-type="Service" class="drag-item">{{ service.label }}</p></td>
+						</tr>
+						</tbody>
+					</table>
+				</div>
+			</div>
+			<div class="ui tab" data-tab="network">
+				<div class="ui top attached message">
+					<i class="close icon" (click)="closeMenu()"></i>
+					<h4 class="ui header">
+						Network
+					</h4>
+				</div>
+				<div class="ui bottom attached segment">
+					<form class="ui form">
+						<div class="field">
+							<h6 class="red" [hidden]="viewNetwork.source.name">연결 선을 선택하세요.</h6>
+						</div>
+						<div class="field">
+							<label>Source</label>
+							<input type="text" name="source" placeholder="Source" [value]="viewNetwork.source.name" readonly>
+						</div>
+						<div class="field">
+							<label>Target</label>
+							<input type="text" name="target" placeholder="Target" [value]="viewNetwork.target.name" readonly>
+						</div>
+						<div class="field">
+							<label>Protocol</label>
+							<select class="ui search dropdown" name="protocol" [(ngModel)]="viewNetwork.protocol" #protocol="ngModel">
+								<option value="tcp">TCP</option>
+								<option value="udp">UDP</option>
+							</select>
+						</div>
+						<div class="field">
+							<label>Port</label>
+							<input type="text" name="port" placeholder="Port" [(ngModel)]="viewNetwork.port" #port="ngModel">
+						</div>
+						<div class="ui divider"></div>
+						<button class="ui button" (click)="deleteNetwork(viewNetwork)" *ngIf="viewNetwork.source.name != ''">Delete</button>
+					</form>
+				</div>
+			</div>
+			<div class="ui tab" data-tab="routing">
+				<div class="ui top attached message">
+					<i class="close icon" (click)="closeMenu()"></i>
+					<h4 class="ui header">
+						Routing
+					</h4>
+				</div>
+				<div class="ui bottom attached segment">
+					<table class="ui celled table center aligned">
+						<thead>
+						<tr>
+							<th>Service</th>
+							<th>Path</th>
+							<th></th>
+						</tr>
+						</thead>
+						<tbody>
+						<tr *ngFor="let route of routes; let i = index;">
+							<td>
+								<div class="ui input pack">
+									<input type="text" [(ngModel)]="route.service" name="serviceId{{ i+1 }}" #serviceId="ngModel" placeholder="Service ID">
+								</div>
+							</td>
+							<td>
+								<div class="ui input pack">
+									<input type="text" [(ngModel)]="route.path" name="path{{ i+1 }}" #path="ngModel" placeholder="Path">
+								</div>
+							</td>
+							<td *ngIf="i==routes.length-1"><i class="plus blue icon" (click)="addRoute()"></i></td>
+							<td *ngIf="i!=routes.length-1"><i class="minus red icon" (click)="removeRoute(route)"></i></td>
+						</tr>
+						</tbody>
+					</table>
+				</div>
+			</div>
+			<div class="ui tab" data-tab="config">
+				<div class="ui top attached message">
+					<i class="close icon" (click)="closeMenu()"></i>
+					<h4 class="ui header">
+						Config
+					</h4>
+				</div>
+				<div class="ui bottom attached segment">
+					<table class="ui celled table center aligned">
+						<thead>
+						<tr>
+							<th>App</th>
+							<th>Properties</th>
+							<th></th>
+						</tr>
+						</thead>
+						<tbody>
+						<tr *ngFor="let config of configs; let i = index;">
+							<td>
+								<div class="ui input pack">
+									<input type="text" [(ngModel)]="config.app" name="app{{ i+1 }}" #key="ngModel" placeholder="App">
+								</div>
+							</td>
+							<td>
+								<div class="ui input pack">
+									<input type="text" [(ngModel)]="config.property" name="property{{ i+1 }}" #value="ngModel" placeholder="Property">
+								</div>
+							</td>
+							<td *ngIf="i==configs.length-1"><i class="plus blue icon" (click)="addConfig()"></i></td>
+							<td *ngIf="i!=configs.length-1"><i class="minus red icon" (click)="deleteConfig(i)"></i></td>
+						</tr>
+						</tbody>
+					</table>
+				</div>
+			</div>
+			<div class="ui tab" data-tab="api">
+				<div class="ui top attached message">
+					<i class="close icon" (click)="closeMenu()"></i>
+					<h4 class="ui header">
+						API
+					</h4>
+				</div>
+				<div class="ui bottom attached segment">
+					<div class="ui small icon input" style="width:100%;">
+						<input type="text" placeholder="Search APIs..." [(ngModel)]="searchApiName" (keyup.enter)="searchApis(searchApiName)">
+						<i class="search icon" (click)="searchApis(searchApiName)"></i>
+					</div>
+					<h6 class="text-right">Total <span>{{Apis.length}}</span></h6>
+					<table class="ui celled table center aligned">
+						<thead>
+						<tr>
+							<th>Name</th>
+							<th> </th>
+						</tr>
+						</thead>
+						<tbody>
+						<tr *ngFor="let api of Apis">
+							<td>{{ api.name }}</td>
+							<td>
+								<button class="ui icon button" title="추가" (click)="showAddApi(api)">
+									<i class="plus alternate icon"></i>
+								</button>
+								<button class="ui icon button" title="API" (click)="getSwagger(api)">
+									<i class="random alternate outline icon"></i>
+								</button>
+							</td>
+						</tr>
+						</tbody>
+					</table>
+				</div>
+			</div>
+		</div>
+		<div class="one wide column">
+			<div class="ui vertical labeled icon menu" (click)="openMenu($event)">
+				<a class="item" data-tab="app" #tabApp>
+					<i class="cube icon"></i>
+					App
+				</a>
+				<a class="item" data-tab="service" #tabService>
+					<i class="cubes icon"></i>
+					Service
+				</a>
+				<a class="item" data-tab="network" #tabNetwork>
+					<i class="signal icon"></i>
+					Network
+				</a>
+				<a class="item" data-tab="routing" #tabRouting>
+					<i class="map signs icon"></i>
+					Routing
+				</a>
+				<a class="item" data-tab="config" #tabConfig>
+					<i class="write icon"></i>
+					Config
+				</a>
+				<a class="item" data-tab="api" #tabApi>
+					<i class="random icon"></i>
+					API
+				</a>
+			</div>
+		</div>
+	</div>
+	<div class="ui stackable grid"  style="padding-bottom: 20px;">
+		<div class="fifteen wide column">
+			<div class="ui fluid segment">
+				<h4 class="ui top attached block header">
+					<div class="title">
+						<h4 class="ui header">API</h4>
+					</div>
+				</h4>
+				<div class="ui bottom attached segment">
+					<div class="ui stackable four column grid api">
+						<div class="column" *ngFor="let microapi of microapis">
+							<div class="ui big very relaxed horizontal list">
+								<div class="item">
+									<div class="ui content small image">
+										<div class="apiavatar" [image]="microapi.image"></div>
+									</div>
+									<div class="content">
+										<i class="close icon" (click)="delAppApi(microapi.id, microapi.microId, microapi.name)"></i>
+										<a class="header" style="cursor: default">{{microapi.name}}</a>
+										<div class="description">
+											<p>{{microapi.host}} {{microapi.path}}</p>
+											<div class="ui label" title="사용자" style="cursor: pointer" (click)= "resetAppApiPassword(microapi)"><!--"testAppApi(microapi.id, microapi.microId, microapi.name)"-->
+												<i class="user icon"></i> {{microapi.username}}
+											</div>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
 
 </div>
 
 <!-- modal -->
 <div class="ui mini modal">
-  <div class="header">
-    {{ modal.type }} Information
-  </div>
-  <div class="content">
-    <div class="ui form">
-      <div class="field">
-        <label>{{ modal.type }} Name</label>
-        <input type="text"  [(ngModel)]="modal.node_name" name="instances" #node_name="ngModel" placeholder="{{ modal.type }} Name" readonly>
-      </div>
-      <div *ngIf="modal.type=='App'">
-        <div class="field">
-          <label>Instance</label>
-          <select class="ui fluid dropdown" [(ngModel)]="modal.instances" name="instances" #instances="ngModel" disabled>
-            <option value="1">1</option>
-            <option value="2">2</option>
-            <option value="3">3</option>
-            <option value="4">4</option>
-            <option value="5">5</option>
-            <option value="6">6</option>
-            <option value="7">7</option>
-            <option value="8">8</option>
-            <option value="9">9</option>
-            <option value="10">10</option>
-          </select>
-        </div>
-        <div class="field">
-          <label>Memory(MB)</label>
-          <input type="text" [(ngModel)]="modal.memory" name="memory" #memory="ngModel" placeholder="Memory" readonly>
-        </div>
-        <div class="field">
-          <label>Disk(MB)</label>
-          <input type="text" [(ngModel)]="modal.disk_quota" name="disk_quota" #disk_quota="ngModel" placeholder="Disk" readonly>
-        </div>
-      </div>
-      <div *ngIf="modal.type=='Service'">
-        <div class="field">
-          <label>Service Plan Guid</label>
-          <input type="text" [(ngModel)]="modal.service_plan_guid" name="service_plan_guid" #service_plan_guid="ngModel" placeholder="Service Plan Guid" readonly>
-        </div>
-      </div>
-    </div>
-  </div>
-  <!--<div class="actions">-->
-    <!--<div class="ui black deny button">-->
-      <!--Close-->
-    <!--</div>-->
-    <!--<div class="ui positive right labeled icon button">-->
-      <!--Save-->
-      <!--<i class="checkmark icon"></i>-->
-    <!--</div>-->
-  <!--</div>-->
+	<div class="header">
+		{{ modal.type }} Information
+	</div>
+	<div class="content">
+		<div class="ui form">
+			<div class="field">
+				<label>{{ modal.type }} Name</label>
+				<input type="text"  [(ngModel)]="modal.node_name" name="instances" #node_name="ngModel" placeholder="{{ modal.type }} Name" readonly>
+			</div>
+			<div *ngIf="modal.type=='App'">
+				<div class="field">
+					<label>Instance</label>
+					<select class="ui fluid dropdown" [(ngModel)]="modal.instances" name="instances" #instances="ngModel" disabled>
+						<option value="1">1</option>
+						<option value="2">2</option>
+						<option value="3">3</option>
+						<option value="4">4</option>
+						<option value="5">5</option>
+						<option value="6">6</option>
+						<option value="7">7</option>
+						<option value="8">8</option>
+						<option value="9">9</option>
+						<option value="10">10</option>
+					</select>
+				</div>
+				<div class="field">
+					<label>Memory(MB)</label>
+					<input type="text" [(ngModel)]="modal.memory" name="memory" #memory="ngModel" placeholder="Memory" readonly>
+				</div>
+				<div class="field">
+					<label>Disk(MB)</label>
+					<input type="text" [(ngModel)]="modal.disk_quota" name="disk_quota" #disk_quota="ngModel" placeholder="Disk" readonly>
+				</div>
+			</div>
+			<div *ngIf="modal.type=='Service'">
+				<div class="field">
+					<label>Service Plan Guid</label>
+					<input type="text" [(ngModel)]="modal.service_plan_guid" name="service_plan_guid" #service_plan_guid="ngModel" placeholder="Service Plan Guid" readonly>
+				</div>
+			</div>
+		</div>
+	</div>
+	<!--<div class="actions">-->
+		<!--<div class="ui black deny button">-->
+			<!--Close-->
+		<!--</div>-->
+		<!--<div class="ui positive right labeled icon button">-->
+			<!--Save-->
+			<!--<i class="checkmark icon"></i>-->
+		<!--</div>-->
+	<!--</div>-->
 </div>
 
-
+<!-- selectedMicroapi.image가 존재하면 계정 수정 존재하지 않으면 생성-->
 <div class="ui tiny modal addapi">
-  <div class="header">
-    Auth
-  </div>
-  <div class="content">
-    <div class="ui form">
-      <form #defaultForm="ngForm">
-        <h5 class="ui dividing header" style="font-weight: normal">Basic Auth</h5>
-        <div class="two fields">
-          <div class="field">
-            username <input placeholder="username" type="text" name="username" [(ngModel)]="selectedMicroapi.username" required>
-          </div>
-          <div class="field">
-            password <input placeholder="password" type="password" name="userpassword" [(ngModel)]="selectedMicroapi.userpassword" required>
-          </div>
-        </div>
-      </form>
+	<div class="header">
+		Auth
+	</div>
+	<div class="content">
+		<div class="ui form">
+			<form #defaultForm="ngForm">
+				<h5 class="ui dividing header" style="font-weight: normal">Basic Auth</h5>
+				<div class="two fields">
+					<div class="field">
+						username
+            <input placeholder="username" type="text" name="username" [(ngModel)]="selectedMicroapi.username" required *ngIf="selectedMicroapi.image == null" >
+            <input placeholder="username" type="text" name="username" [(ngModel)]="selectedMicroapi.username" required *ngIf="selectedMicroapi.image != null" readOnly>
+					</div>
+					<div class="field">
+						password <input placeholder="password" type="password" name="userpassword" [(ngModel)]="selectedMicroapi.userpassword" required>
+					</div>
+				</div>
+			</form>
 
 
-    </div>
-  </div>
-  <div class="actions mt40">
-    <button class="ui button cancel gray">취소</button>
-    <button class="ui primary ok button" (click)="addApi()" [disabled]="!defaultForm.form.valid">추가</button>
-  </div>
+		</div>
+	</div>
+	<div class="actions mt40">
+		<button class="ui button cancel gray">취소</button>
+		<button class="ui primary ok button" (click)="addApi(selectedMicroapi.path)" [disabled]="!defaultForm.form.valid">추가</button>
+	</div>
 </div>
 
 
 <div class="ui modal swagger">
-  <div class="header">
-    REST API
-  </div>
-  <div class="content">
-    <iframe [src]="iframeSrc" height="500" width="100%" style="border:1px solid #e0e1e2"></iframe>
-  </div>
-  <div class="actions mt40">
-    <button class="ui button cancel gray">닫기</button>
-  </div>
+	<div class="header">
+		REST API
+	</div>
+	<div class="content">
+		<iframe [src]="iframeSrc" height="30%" width="100%" style="border:1px solid #e0e1e2"></iframe>
+	</div>
+	<div class="actions mt40">
+		<button class="ui button cancel gray">닫기</button>
+	</div>
 </div>

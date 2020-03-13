@@ -73,17 +73,21 @@ func NewHandler(
 
 		studio.ListMicroserviceApi: http.HandlerFunc(microServer.ListMicroserviceApi),
 		studio.GetMicroserviceApi: http.HandlerFunc(microServer.GetMicroserviceApi),
+		studio.GetMicroserviceApiUserList: http.HandlerFunc(microServer.GetMicroserviceApiUserList),
 		studio.GetMicroserviceApiSwagger: http.HandlerFunc(microServer.GetMicroserviceApiSwagger),
 		studio.SaveMicroserviceApiSwagger: http.HandlerFunc(microServer.SaveMicroserviceApiSwagger),
 		studio.GetMicroserviceApiRule: http.HandlerFunc(microServer.GetMicroserviceApiRule),
 		studio.CreateMicroserviceApi: http.HandlerFunc(microServer.CreateMicroserviceApi),
-		studio.ListMicroserviceAppApi: http.HandlerFunc(microServer.ListMicroserviceAppApi),
+		studio.ListMicroserviceAppApiByMicroID: http.HandlerFunc(microServer.ListMicroserviceAppApiByMicroID),
+		studio.ListMicroserviceAppApiByApiID: http.HandlerFunc(microServer.ListMicroserviceAppApiByApiID),
 		studio.CreateMicroserviceAppApi: http.HandlerFunc(microServer.CreateMicroserviceAppApi),
+		studio.UpdateMicroserviceAppApi: http.HandlerFunc(microServer.UpdateMicroserviceAppApi),
 		studio.DeleteMicroserviceAppApi: http.HandlerFunc(microServer.DeleteMicroserviceAppApi),
 		studio.DeleteMicroserviceApi: http.HandlerFunc(microServer.DeleteMicroserviceApi),
 		studio.ListMicroserviceFrontend: http.HandlerFunc(microServer.ListMicroserviceFrontend),
 		studio.ListMicroserviceApiHealth: http.HandlerFunc(microServer.ListMicroserviceApiHealth),
 		studio.GetMicroserviceNameCheck: http.HandlerFunc(microServer.GetMicroserviceNameCheck),
+		studio.GetMicroservicePathCheck: http.HandlerFunc(microServer.GetMicroservicePathCheck),
 
 		studio.GetMicroserviceMonitoring: http.HandlerFunc(microServer.GetMicroserviceMonitoring),
 

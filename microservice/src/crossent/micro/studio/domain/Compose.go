@@ -37,6 +37,8 @@ type MicroserviceComposition struct {
 	Services    ServiceInstances `json:"services,omitempty"`
 	ServiceBindings    ServiceBindings `json:"serviceBindings,omitempty"`
 	Policies    []Policy `json:"policies"`
+	// 0217
+	DelPolicies    []Policy `json:"delpolicies"`
 	Routes      []map[string]interface{} `json:"routes"`
 	Configs     []map[string]interface{} `json:"configs"`
 	DelApps        Apps     `json:"delapps,omitempty"`

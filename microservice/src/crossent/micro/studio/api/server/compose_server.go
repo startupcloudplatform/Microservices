@@ -1,20 +1,20 @@
 package server
 
 import (
-	"net/http"
-
+	"bytes"
+	"code.cloudfoundry.org/lager"
+	"crossent/micro/studio/client"
+	"crossent/micro/studio/domain"
+	"crypto/tls"
 	"encoding/json"
 	"fmt"
-	"crossent/micro/studio/domain"
+	"io"
+	"io/ioutil"
+	"net/http"
+	"regexp"
 	"strconv"
 	"strings"
-	"crypto/tls"
-	"crossent/micro/studio/client"
-	"bytes"
-	"io/ioutil"
-	"io"
 	"time"
-	"code.cloudfoundry.org/lager"
 )
 
 type T interface{}
@@ -634,7 +634,30 @@ func (s *Server) UpdateMicroserviceComposition(w http.ResponseWriter, r *http.Re
 			}
 		}
 	}
-	// 5. add network policy (cf)
+	// 5-1. delete network policy (cf)
+	if len(composition.DelPolicies) > 0 {
+		networkPolicies := domain.Policies{}
+		policies := []domain.Policy{}
+		for _, policy := range composition.DelPolicies {
+			if strings.Index(policy.Source.ID, domain.STATUS_INITIAL) > -1 {
+				policy.Source.ID = realIds[policy.Source.ID].(string)
+			}
+			if strings.Index(policy.Destination.ID, domain.STATUS_INITIAL) > -1 {
+				policy.Destination.ID = realIds[policy.Destination.ID].(string)
+			}
+			policies = append(policies, policy)
+		}
+		networkPolicies.TotalPolicies = len(composition.Policies)
+		networkPolicies.Policies = policies
+
+		err = s.DeleteAccess(networkPolicies)
+		if err != nil {
+			logger.Error("[UpdateMicroserviceComposition] DeleteAccess err >>>", err)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+	}
+	// 5-2. add network policy (cf)
 	if len(composition.Policies) > 0 {
 		networkPolicies := domain.Policies{}
 		policies := []domain.Policy{}
@@ -843,24 +866,63 @@ func (s *Server) UpdateMicroserviceState(w http.ResponseWriter, r *http.Request)
 		json.NewEncoder(w).Encode(err)
 		return
 	}
-
-	// 1. UpdateMicroserviceStatus
-	appRequest := domain.ComposeRequest{ID: id, Status: request.Status}
-	_, err = s.repositoryFactory.Compose().UpdateMicroserviceStatus(appRequest)
-	if err != nil {
-		logger.Error("[UpdateMicroserviceState] UpdateMicroserviceStatus err >>>", err)
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	// 2. start/stop ms app
-	// 2-1. configapp, registryapp
+	// 1. start/stop ms app
+	// 1-1. configapp, registryapp
 	query := fmt.Sprintf("name+IN+config-server-%s,registry-server-%s", request.Name, request.Name)
 	serviceInstances, err := s.GetServiceInstanceByQuery(query)
+	configApp := domain.AppResource{}
+	maxCount := 5
 	for _, si := range serviceInstances.Resources {
 		appName := fmt.Sprintf("%sapp%s", strings.Split(si.Entity.Name, "-")[0], si.Metadata.GUID)
 		apps, _ := s.GetAppByName(appName)
 		app := apps.Resources[0]
+		// spring-cloud-config가 정상적으로 동작하는지 확인하고 spring-cloud-registry 동작
+		if request.Status == "STARTED" {
+			if strings.HasPrefix(app.Entity.Name, "config") {
+				configApp = app
+				fmt.Printf("config_app: %s\n", configApp.Entity.Name)
+			} else if strings.HasPrefix(app.Entity.Name, "registry") {
+				// spring-cloud-config 동작 여부 확인
+				basicUser := configApp.Entity.Environment[domain.BASIC_USER]
+				basicSecret := configApp.Entity.Environment[domain.BASIC_SECRET]
+				configAppName := configApp.Entity.Name
+
+				rel, _ := regexp.Compile("[http]+s*://[a-zA-Z]{1,}[^\\.\\s]*[\\.]{1}")
+				excludeString := rel.FindString(s.uaa.ApiURL)
+				apiDomain := s.uaa.ApiURL[len(excludeString):]
+				//apiDomain := strings.Trim(s.uaa.ApiURL, excludeString)
+				fmt.Printf("apiDomain: %s\n", apiDomain)
+				configApiUri := fmt.Sprintf("http://%s:%s@%s.%s/config/read?refresh=false",
+					basicUser, basicSecret, configAppName, apiDomain)
+				for i := 1; i <= maxCount; i++ {
+					resp, err := http.Get(configApiUri)
+					if err != nil {
+						logger.Error("failed http get spring-cloud-config", err)
+						w.WriteHeader(http.StatusInternalServerError)
+						json.NewEncoder(w).Encode(err)
+						return
+					}
+					if resp.StatusCode != 200 {
+						logger.Error(
+							fmt.Sprintf("Config app is not running, StatusCode: %s",resp.StatusCode),
+							fmt.Errorf("check cloudfoundry Config app"))
+						if i == maxCount {
+							w.WriteHeader(http.StatusInternalServerError)
+							w.Write([]byte("Config Application is not working.\n Please try again in a moment."))
+							return
+						}
+					} else {
+						logger.Debug("Configuration application is running")
+						break
+					}
+				}
+			} else {
+				logger.Error("[UpdateMicroserviceState] App does not exist. >>>", err)
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+		}
+		// cf application start/stop
 		body := map[string]string{ "state" : request.Status, }
 		_, err := s.UpdateApp(app.Meta.Guid, body, token)
 		if err != nil {
@@ -869,8 +931,13 @@ func (s *Server) UpdateMicroserviceState(w http.ResponseWriter, r *http.Request)
 			return
 		}
 	}
-	// 2-2. gatewayapp
+	// 1-2. gatewayapp
 	gatewayapps, _ := s.GetAppByName(fmt.Sprintf("%s-%s", domain.MSA_GATEWAY_APP, request.Name))
+	if len(gatewayapps.Resources) == 0 {
+		http.Error(w, "err.Error()", http.StatusInternalServerError)
+		return
+	}
+
 	gatewayapp := gatewayapps.Resources[0]
 	body := map[string]string{ "state" : request.Status, }
 	_, err = s.UpdateApp(gatewayapp.Meta.Guid, body, token)
@@ -880,7 +947,7 @@ func (s *Server) UpdateMicroserviceState(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	// 3. start/stop microservice apps
+	// 2. start/stop microservice apps
 	msApps, err := s.repositoryFactory.Compose().ListMicroserviceAppApp(id)
 	if err != nil {
 		logger.Error("[UpdateMicroserviceState] failed ListMicroserviceAppApp", err)
@@ -896,6 +963,15 @@ func (s *Server) UpdateMicroserviceState(w http.ResponseWriter, r *http.Request)
 				logger.Error("[UpdateMicroserviceState] UpdateApp err >>>", err)
 			}
 		}(app.AppGuid)
+	}
+
+	// 3. UpdateMicroserviceStatus
+	appRequest := domain.ComposeRequest{ID: id, Status: request.Status}
+	_, err = s.repositoryFactory.Compose().UpdateMicroserviceStatus(appRequest)
+	if err != nil {
+		logger.Error("[UpdateMicroserviceState] UpdateMicroserviceStatus err >>>", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")

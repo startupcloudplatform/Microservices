@@ -31,12 +31,26 @@ type MicroApi struct {
 	Username        string   `json:"username,omitempty"`
 	Userpassword    string   `json:"userpassword,omitempty"`
 	OrgGuid     	string   `json:"orgguid,omitempty"`
+	MicroName        	string   `json:"microname"`
 }
 
 type MicroApiRule struct {
 	ID          	int   	 `json:"id"`
 	Rule        	string   `json:"rule"`
 	Active     	string   `json:"active"`
+}
+
+//&appApi.ID, &appApi.MicroId, &appApi.UserName, &appApi.Active, &appApi.ApiId, &appApi.name, &appApi.serviceName, &appApi.serviceUrl
+
+type MicroAppApi struct {
+	ID          	int   	 `json:"id"`
+	MicroId        	int      `json:"microId"`
+	ApiId     		int      `json:"apiId"`
+	UserName		string   `json:"username"`
+	Active          string   `json:"active"`
+	Name			string	 `json:"name"`
+	ServiceName		string	 `json:"servicename"`
+	Path			string	 `json:"path"`
 }
 
 type HeaderKeyValue struct {

@@ -137,7 +137,6 @@ func (s *Server) ListMicroservice(w http.ResponseWriter, r *http.Request) {
 		views[i].Service = serviceCnt
 	}
 
-
 	w.WriteHeader(http.StatusOK)
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(views)
@@ -151,8 +150,24 @@ func (s *Server) GetMicroservice(w http.ResponseWriter, r *http.Request) {
 
 	id := r.FormValue(":id")
 
+	token, err := s.uaa.GetAuthToken()
+	if err != nil {
+		logger.Error("failed cf get auth token", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(err)
+		return
+	}
+
 	idint, _ := strconv.Atoi(id)
 	view, err := s.repositoryFactory.View().GetMicroservice(idint)
+
+	//add
+	orgsummary := s.GetOrgSummary(view.OrgGuid, token)
+	view.OrgName = orgsummary.Name
+
+	spacesummary := s.GetSpaceSummary(view.SpaceGuid, token)
+	view.SpaceName = spacesummary.Name
+
 
 	if b := s.access(r, view.SpaceGuid); !b {
 		logger.Error("no auth", fmt.Errorf("no auth"))
@@ -424,8 +439,8 @@ func (s *Server) GetMicroserviceDetail(w http.ResponseWriter, r *http.Request) {
 
 			basicUser := summary.Environment[domain.BASIC_USER]
 			basicSecret := summary.Environment[domain.BASIC_SECRET]
-
-			resp, err := http.Get(fmt.Sprintf("http://%s:%s@%s/config/read/%s?refresh=true", basicUser, basicSecret, configUrl, summary.Name))
+			configUrl := fmt.Sprintf("http://%s:%s@%s/config/read/%s?refresh=true", basicUser, basicSecret, configUrl, summary.Name)
+			resp, err := http.Get(configUrl)
 			if err != nil {
 				logger.Error("failed http read properties", err)
 				w.WriteHeader(http.StatusInternalServerError)
@@ -608,9 +623,9 @@ func (s *Server) GetMicroserviceLink(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// external api
-	viewApis, err := s.repositoryFactory.Apigateway().ListMicroserviceAppApi(view.ID)
+	viewApis, err := s.repositoryFactory.Apigateway().ListMicroserviceAppApiByMicroID(view.ID)
 	if err != nil {
-		logger.Error("failed ListMicroserviceAppApi", err)
+		logger.Error("failed ListMicroserviceAppApiByMicroID", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		json.NewEncoder(w).Encode(err)
 		return
@@ -939,6 +954,26 @@ func (s *Server) DeleteMicroservice(w http.ResponseWriter, r *http.Request) {
 	logger := s.logger.Session("micro")
 	logger.Debug("DeleteMicroservice")
 
+	id := r.FormValue(":id")
+	idint, _ := strconv.Atoi(id)
+
+	microApis, err := s.repositoryFactory.Apigateway().ListMicroserviceAppApiByMicroID(idint)
+	if err != nil {
+		logger.Error("failed MicroAppAPI by MicroID", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(err)
+		return
+	} else if len(microApis) > 0 {
+		logger.Error("MicroAppAPI exists, First, delete MicroAppAPI !", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte("There is a registered API int this MSA, First, delete API !"))
+		return
+	} else {
+
+	}
+
+	view, err := s.repositoryFactory.View().GetMicroservice(idint)
+
 	adminToken, err := s.uaa.GetAuthToken()
 	if err != nil {
 		logger.Error("failed cf get auth token", err)
@@ -946,12 +981,6 @@ func (s *Server) DeleteMicroservice(w http.ResponseWriter, r *http.Request) {
 		json.NewEncoder(w).Encode(err)
 		return
 	}
-
-	id := r.FormValue(":id")
-
-	idint, _ := strconv.Atoi(id)
-	view, err := s.repositoryFactory.View().GetMicroservice(idint)
-
 
 	if err != nil {
 		logger.Error("failed GetMicroservice", err)
@@ -1018,8 +1047,32 @@ func (s *Server) DeleteMicroservice(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = s.repositoryFactory.View().DeleteMicroservice(view.ID)
+	msApps, err := s.repositoryFactory.Compose().ListMicroserviceAppApp(view.ID)
+	// micro_app 테이블에서 레코드를 통째로 삭제할지 말지 확인
+	deleteMicroAppRecord := false
+	var appGuid *string = nil
+	// viewApps 중 같은 마이크로 서비스인 경우 삭제
+	if err != nil {
+		logger.Error("failed Compose().ListMicroserviceAppApp", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(err)
+		return
+	} else {
+		if msApps == nil {
+			deleteMicroAppRecord = true
+		} else {
+			for _, msApp := range msApps {
+				fmt.Println("will Delete msApp_ID: "+ string(msApp.MicroID) + " msApp_NAME: " + view.Name)
+				appGuid = &msApp.AppGuid
+				if appGuid == nil || *appGuid == ""  {
+					deleteMicroAppRecord = true
+					break
+				}
+			}
+		}
+	}
 
+	err = s.repositoryFactory.View().DeleteMicroservice(view.ID, view.Name, deleteMicroAppRecord)
 	if err != nil {
 		logger.Error("failed DeleteMicroservice", err)
 		w.WriteHeader(http.StatusInternalServerError)
@@ -1059,6 +1112,16 @@ func (s *Server) DeleteMicroservice(w http.ResponseWriter, r *http.Request) {
 					// delete service instance (recursive)
 					if err := s.DeleteServiceInstanceByGuid(sbr.Entity.ServiceInstanceGuid); err != nil {
 						logger.Error("DeleteMicroservice Serviceinstance error", err, lager.Data{"appGUID": appGuid})
+					}
+				}
+			} else {
+				//allServiceInstances, err := s.ListServiceInstance()
+				for _, viewService := range viewServices {
+					service := s.GetServiceInstanceByGuid (viewService.ServiceGuid)
+					if &service != nil {
+						if err := s.DeleteServiceInstanceByGuid(service.Metadata.GUID); err != nil {
+							logger.Error("DeleteMicroservice Serviceinstance error", err, lager.Data{"appGUID": appGuid})
+						}
 					}
 				}
 			}

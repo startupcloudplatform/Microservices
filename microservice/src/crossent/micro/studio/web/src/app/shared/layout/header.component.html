@@ -1,4 +1,4 @@
-<div class="ui fixed inverted menu" [hidden]="!authService.isAuthenticated() && buttonHide">
+<div class="ui fixed inverted menu" [hidden]="!authService.isAuthenticated() || buttonHide">
   <div class="ui">
     <p class="header item">
       MsXpert

@@ -117,7 +117,6 @@ export class MicroDetailComponent implements AfterViewInit {
         this.routings = data['routes'];
         this.registries = data['registries'];
         this.configurations = data['properties'];
-
       }
     );
 
@@ -276,6 +275,7 @@ export class MicroDetailComponent implements AfterViewInit {
       }, err => {
         console.log(JSON.stringify(err.headers));
         console.log(err.status+" "+err.message);
+        alert("err: " + err.status + "\n" +err.error);
       }
     );
   }

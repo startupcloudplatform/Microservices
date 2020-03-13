@@ -3,8 +3,9 @@ package db
 import (
 	"crossent/micro/studio/db/lock"
 	"crossent/micro/studio/domain"
-	sq "github.com/Masterminds/squirrel"
 	"fmt"
+	sq "github.com/Masterminds/squirrel"
+	"time"
 )
 
 //var ErrConfigComparisonFailed = errors.New("comparison with existing config failed during save")
@@ -18,7 +19,7 @@ type ViewRepository interface {
 	ListMicroserviceAppApp(int) ([]domain.View, error)
 	ListMicroserviceApi(int, string, []string) ([]domain.View, error)
 	SaveMicroserviceApi(domain.View, []string) error
-	DeleteMicroservice(int) error
+	DeleteMicroservice(int, string, bool) error
 	ListMicroserviceAppService(int) ([]domain.View, error)
 }
 
@@ -233,7 +234,7 @@ func (v *viewRepository) SaveMicroserviceApi(view domain.View, spaces []string) 
 	return nil
 }
 
-func (v *viewRepository) DeleteMicroservice(id int) error {
+func (v *viewRepository) DeleteMicroservice(id int, name string, deleteMicroApp bool) error {
 	tx, err := v.conn.Begin()
 	if err != nil {
 		return err
@@ -263,14 +264,29 @@ func (v *viewRepository) DeleteMicroservice(id int) error {
 		return err
 	}
 
-	_, err = psql.Update("micro_app").
-		Set("active", "N").
-		Where(sq.Eq{"id": id}).
-		RunWith(tx).
-		Exec()
+	if deleteMicroApp == true {
+		_, err = psql.Delete("micro_app").
+			Where(sq.Eq{
+				"name": name,
+			}).
+			RunWith(tx).
+			Exec()
 
-	if err != nil {
-		return err
+		if err != nil {
+			return err
+		}
+	} else {
+		deletedDate := time.Now().Format("2006-01-02 15:04:05")
+		_, err = psql.Update("micro_app").
+			Set("name", name+"__"+deletedDate).
+			Set("active", "N").
+			Where(sq.Eq{"id": id}).
+			RunWith(tx).
+			Exec()
+
+		if err != nil {
+			return err
+		}
 	}
 
 	err = tx.Commit()

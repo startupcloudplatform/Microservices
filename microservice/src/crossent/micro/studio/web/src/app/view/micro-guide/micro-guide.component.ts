@@ -39,7 +39,8 @@ export class MicroGuideComponent implements OnInit {
 
   first_pom =  `
 <dependencies>
-  <!-- required start -->
+  <!-- required start -->git
+  <!--spring cloud-->
   <dependency>
     <groupId>org.springframework.cloud</groupId>
     <artifactId>spring-cloud-starter-config</artifactId>
@@ -56,16 +57,27 @@ export class MicroGuideComponent implements OnInit {
     <groupId>org.springframework.cloud</groupId>
     <artifactId>spring-cloud-starter-hystrix</artifactId>
   </dependency>
+  
+  <!-- spring-boot-starter-test -->
+  <dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-test</artifactId>
+    <scope>test</scope>
+  </dependency>
+  
+  <!-- swagger api -->
   <dependency>
     <groupId>io.springfox</groupId>
     <artifactId>springfox-swagger2</artifactId>
     <version>2.3.1</version>
   </dependency>
   <dependency>
-    <groupId>org.springframework.boot</groupId>
-    <artifactId>spring-boot-starter-test</artifactId>
-    <scope>test</scope>
+    <groupId>io.springfox</groupId>
+    <artifactId>springfox-swagger-ui</artifactId>
+    <version>2.3.1</version>
   </dependency>
+
+  <!-- spring cloud connector -->
   <dependency>
     <groupId>io.pivotal.spring.cloud</groupId>
     <artifactId>spring-cloud-services-cloudfoundry-connector</artifactId>
@@ -176,6 +188,11 @@ class SwaggerConfig {
 }  
   `
 
+  application_properties = `
+server.port: \${PORT:8081}
+eureka.instance.hostname=\${CF_INSTANCE_INTERNAL_IP:localhost}
+eureka.instance.nonSecurePort=\${PORT:8091}
+`
 
   mysql_config_java = `
 package com.crossent.microservice;

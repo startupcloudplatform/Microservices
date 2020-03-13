@@ -6,3 +6,19 @@
 .content .button.inactive {
   display: none !important;
 }
+
+.content .ui.grid {
+  display: inherit !important;
+  margin: 0 auto;
+}
+
+.content .ui.grid .message .header, .content .ui.grid .message p {
+  display: inline-block;
+}
+.content .ui.grid .message .header{
+  padding-right: 10px;
+}
+
+.ui.styled.accordion .content{
+  padding: 0.5em 1em 0.9em !important;
+}

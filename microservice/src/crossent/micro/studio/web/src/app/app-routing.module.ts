@@ -13,6 +13,7 @@ import { ApiHealthComponent } from './api/api-health/api-health.component';
 import { ApiManageComponent } from './api/api-manage/api-manage.component';
 import { AuthGuard } from './shared/auth.guard';
 import { RoleGuard } from './shared/role.guard';
+import {ApiUserListComponent} from "./api/api-user-list/api-user-list.component";
 
 const routes: Routes = [
   { path: 'list', component: MicroListComponent, canActivate: [AuthGuard] },
@@ -20,6 +21,7 @@ const routes: Routes = [
   { path: 'apilist', component: ApiListComponent, canActivate: [AuthGuard] },
   { path: 'apicreate', component: ApiCreateComponent, canActivate: [RoleGuard], data: {expectedRole: 'MANAGER'}},
   { path: 'apiview/:id', component: ApiViewComponent, canActivate: [AuthGuard] },
+  { path: 'apiuserlist/:id', component: ApiUserListComponent, canActivate: [AuthGuard] },
   { path: 'apiedit/:id', component: ApiCreateComponent, canActivate: [RoleGuard], data: {expectedRole: 'MANAGER'} },
   { path: 'apihealth', component: ApiHealthComponent, canActivate: [RoleGuard], data: {expectedRole: 'MANAGER'} },
   { path: 'apimanage', component: ApiManageComponent, canActivate: [RoleGuard], data: {expectedRole: 'MANAGER'} },

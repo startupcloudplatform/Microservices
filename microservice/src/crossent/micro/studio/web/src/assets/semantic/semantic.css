@@ -32052,6 +32052,7 @@ select.ui.dropdown {
 @media only screen and (min-width: 1200px) {
   .ui.tiny.modal {
     width: 540px;
+    height: 300px;
     margin: 0em 0em 0em -270px;
   }
 }
@@ -32059,6 +32060,7 @@ select.ui.dropdown {
 @media only screen and (min-width: 1920px) {
   .ui.tiny.modal {
     width: 570px;
+    height: 300px;
     margin: 0em 0em 0em -285px;
   }
 }

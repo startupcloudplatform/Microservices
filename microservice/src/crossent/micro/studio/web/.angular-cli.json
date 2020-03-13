@@ -19,6 +19,7 @@
       "testTsconfig": "tsconfig.spec.json",
       "prefix": "app",
       "styles": [
+        "../node_modules/bootstrap/dist/css/bootstrap.css",
         "assets/semantic/semantic.css",
         "../node_modules/jstree/dist/themes/default/style.css",
         "../node_modules/codemirror/lib/codemirror.css",

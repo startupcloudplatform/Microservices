@@ -50,7 +50,6 @@ export class ApiListComponent implements OnInit {
   listApis() {
     this.apiService.get<MicroApi[]>(`${this.apiUrl}${this.offset}`).subscribe(
       data => {
-        console.log(data)
         this.microapis = data;
       }
     );
@@ -74,7 +73,6 @@ export class ApiListComponent implements OnInit {
     if (this.microId != 0) {
       this.apiService.get<MicroApi>(`apigateway/${microApi.id}`).subscribe(
         data => {
-          console.log(data)
           this.iframeSrc = this.sanitizer.bypassSecurityTrustResourceUrl(this.swaggerApiUrl + '/entry/?id=' + data.microId + '&domain=' + this.api);
         }
       );
@@ -100,7 +98,7 @@ export class ApiListComponent implements OnInit {
 
 
   addApi(){
-
+    console.log("-- api-list.component.html --")
     if (this.microId != 0 && this.selectedMicroapi.username != "" && this.selectedMicroapi.userpassword != "") {
       this.selectedMicroapi.microId = this.microId;
 

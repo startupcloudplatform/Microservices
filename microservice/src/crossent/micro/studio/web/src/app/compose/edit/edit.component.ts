@@ -1,3 +1,5 @@
+import {Micro} from "../../view/micro-list/micro.model";
+
 declare var jQuery: any;
 
 import { Component, OnInit, ViewChild, ElementRef } from '@angular/core';
@@ -12,6 +14,7 @@ import { Node } from '../../d3-studio/shared/node.model';
 import { Link } from '../../d3-studio/shared/link.model';
 import { environment } from '../../../environments/environment';
 import { MicroApi } from '../../api/models/microapi.model';
+import {select} from "d3-selection";
 
 @Component({
   selector: 'app-edit',
@@ -26,6 +29,7 @@ export class EditComponent implements OnInit {
 
   apiUrl: string = 'microservices';
   micro = new Microservice(0,null,null,'','','','false','');
+  orgSpace: string ='';
   public accordion = false;
   marketApps = [];
   marketServices = [];
@@ -34,6 +38,8 @@ export class EditComponent implements OnInit {
   configService: any;
   registryService: any;
   networkPolicyMaps = new Map();
+  // 0217
+  delNetworkPolicyMaps = new Map();
   viewNetwork: any;
 
   searchAppName: string;
@@ -82,6 +88,8 @@ export class EditComponent implements OnInit {
     this.apiService.get<Microservice>(`${this.apiUrl}/${this.micro.id}`).subscribe(
       data => {
         this.micro = data['microservice'];
+        this.orgSpace = this.micro['orgName'] +'/' + this.micro['spaceName'];
+        console.log(this.micro);
       }
     );
   }
@@ -108,7 +116,7 @@ export class EditComponent implements OnInit {
 
         // Do not display config-server and registry-server
         let configServiceIndex = 0, registryServiceIndex = 0;
-        for(var i = 0; i < composeServices.length; i++) {
+        for (var i = 0; i < composeServices.length; i++) {
           if(composeServices[i].entity.name.indexOf(environment.configService) >= 0) {
             configServiceIndex = i;
             this.configService = composeServices[i];
@@ -118,25 +126,25 @@ export class EditComponent implements OnInit {
           }
         }
         composeServices.splice(configServiceIndex,1);
-        if(configServiceIndex < registryServiceIndex) registryServiceIndex--;
+        if(configServiceIndex < registryServiceIndex)  registryServiceIndex--;
         composeServices.splice(registryServiceIndex,1);
         let nodesCnt = composeServices.length + composeApps.length;
         let posCnt = -1;
 
         // services
-        for(var i = 0; i < composeServices.length; i++) {
+        for (let i = 0; i < composeServices.length; i++) {
           posCnt++;
           xVal[posCnt] = (_x / 2 + _distance * Math.cos(2 * Math.PI * posCnt / nodesCnt));
           yVal[posCnt] = (_y / 2 + _distance * Math.sin(2 * Math.PI * posCnt / nodesCnt));
-          let _node = {
-            shape: "circle",
+          const _node = {
+            shape: 'circle',
             x: xVal[posCnt],
             y: yVal[posCnt],
             r: 25,
             id: composeServices[i].metadata.guid,
             name: composeServices[i].entity.name,
-            type: "Service",
-            color: "rgb(177,130,186)"
+            type: 'Service',
+            color: 'rgb(177,130,186)'
           };
           nodeMap.set(composeServices[i].metadata.guid, _node);
           this.nodeDatas.set(composeServices[i].metadata.guid, composeServices[i]);
@@ -144,37 +152,37 @@ export class EditComponent implements OnInit {
         }
 
         // apps
-        for(var i = 0; i < composeApps.length; i++) {
+        for (let i = 0; i < composeApps.length; i++) {
           posCnt++;
           xVal[posCnt] = (_x / 2 + _distance * Math.cos(2 * Math.PI * posCnt / nodesCnt));
           yVal[posCnt] = (_y / 2 + _distance * Math.sin(2 * Math.PI * posCnt / nodesCnt));
-          let _node = {
-            shape: "circle",
+          const _node = {
+            shape: 'circle',
             x: xVal[posCnt],
             y: yVal[posCnt],
             r: 25,
             id: composeApps[i].metadata.guid,
             name: composeApps[i].entity.name,
-            type: "App",
-            color: "rgb(155,208,198)"
+            type: 'App',
+            color: 'rgb(155,208,198)'
           };
           nodeMap.set(composeApps[i].metadata.guid, _node);
           this.nodeDatas.set(composeApps[i].metadata.guid, composeApps[i]);
           this.putNodes(_node);
-          if (composeApps[i].entity.name.startsWith("gatewayapp")) {
+          if (composeApps[i].entity.name.startsWith('gatewayapp')) {
             this.gatewayApp = composeApps[i];
           }
         }
 
         // app & service bindings
         composeBindings.forEach(bind => {
-          if(bind.service_instance_guid == this.configService.metadata.guid || bind.service_instance_guid == this.registryService.metadata.guid) {
+          if (bind.service_instance_guid == this.configService.metadata.guid || bind.service_instance_guid == this.registryService.metadata.guid) {
             return;
           }
           dragLineId++;
-          let source = nodeMap.get(bind.app_guid);
-          let target = nodeMap.get(bind.service_instance_guid);
-          var link = {
+          const source = nodeMap.get(bind.app_guid);
+          const target = nodeMap.get(bind.service_instance_guid);
+          const link = {
             id: dragLineId,
             type: environment.nodeTypeService,
             sNode: {id: source.id, x: source.x, y: source.y},
@@ -185,22 +193,22 @@ export class EditComponent implements OnInit {
           this.links.push(<Link>link);
           this.putLink(link);
           setTimeout(() => {
-            jQuery('#link-path-'+link.id).addClass('service');
+            jQuery('#link-path-' + link.id).addClass('service');
           });
         });
 
         // network-policies
         composePolicies.forEach(policy => {
           dragLineId++;
-          let source = nodeMap.get(policy.source.id);
-          let target = nodeMap.get(policy.destination.id);
+          const source = nodeMap.get(policy.source.id);
+          const target = nodeMap.get(policy.destination.id);
           let type = environment.nodeTypeApp;
 
-          if(source && target) {
+          if (source && target) {
             if (target.type == environment.nodeTypeService) {
-              type = environment.nodeTypeService
+              type = environment.nodeTypeService;
             }
-            var link = {
+            const link = {
               id: dragLineId,
               type: type,
               sNode: {id: source.id, x: source.x, y: source.y},
@@ -211,7 +219,7 @@ export class EditComponent implements OnInit {
             this.links.push(<Link>link);
             if (source.type == environment.nodeTypeApp && target.type == environment.nodeTypeService) {
               link.type = environment.nodeTypeService;
-              if (!source.name.startsWith("gatewayapp")) {
+              if (!source.name.startsWith('gatewayapp')) {
                 this.bindings.push({app: source.id, service: target.id});
               }
             }
@@ -235,7 +243,7 @@ export class EditComponent implements OnInit {
         // routes
         // this.routes = [{linkId: '', service: '', path: ''}];
         let idx = 0;
-        for(var route of composeRoutes) {
+        for (const route of composeRoutes) {
           this.routes.push({
             linkId: idx,
             service: route.serviceName,
@@ -243,15 +251,15 @@ export class EditComponent implements OnInit {
           });
           idx++;
         }
-        if(this.routes.length == 0){
+        if (this.routes.length == 0) {
           this.routes = [{linkId: '', service: '', path: ''}];
         }
 
         // configs
-        for(let property of composeProperties) {
+        for (const property of composeProperties) {
           this.configs.push({app: property.appName, property: property.properties});
         }
-        if(this.configs.length == 0) {
+        if (this.configs.length == 0) {
           this.configs.push({app: '', property: ''});
         }
 
@@ -271,10 +279,10 @@ export class EditComponent implements OnInit {
     this.accordion = true;
     jQuery('.fifteen').prop('class', 'ten wide column');
 
-    var item = event.target;
-    if(item.classList.contains("icon") == true) item = event.target.parentElement;
-    var activeTab = item.dataset.tab;
-    switch(activeTab) {
+    let item = event.target;
+    if (item.classList.contains('icon') == true) { item = event.target.parentElement; }
+    const activeTab = item.dataset.tab;
+    switch (activeTab) {
       case 'app': {
         this.listMarketApps(this.searchAppName);
         break;
@@ -318,18 +326,19 @@ export class EditComponent implements OnInit {
     this.listApis(name);
   }
   listMarketApps(name: string) {
-    if(this.marketApps.length > 0) return;
+    if (this.marketApps.length > 0) { return; }
     this.marketApps = [];
-    let route = 'apps/env?env=' + environment.cfEnvNameMSA+'&private=' + environment.cfEnvNamePrivate;
-    if(name) {
+    let route = 'apps/env?env=' + environment.cfEnvNameMSA + '&private=' + environment.cfEnvNamePrivate;
+    if (name) {
       route = route + '&name=' + name;
     }
     this.apiService.get(route).subscribe(
       data => {
-        var cf_apps = data['resources'];
-        if(cf_apps == null) return false;
-        for(var cf_app of cf_apps) {
-          if(!cf_app.entity.name.startsWith('gatewayapp-micro')) {
+        const cf_apps = data['resources'];
+        console.log(cf_apps);
+        if (cf_apps == null) { return false; }
+        for (const cf_app of cf_apps) {
+          if (!cf_app.entity.name.startsWith('gatewayapp-micro')) {
             this.marketApps.push({
               id: cf_app.metadata.guid,
               name: cf_app.entity.name,
@@ -342,18 +351,18 @@ export class EditComponent implements OnInit {
   }
 
   listMarketServices(label: string) {
-    if(this.marketServices.length > 0) return;
+    if (this.marketServices.length > 0) { return; }
     this.marketServices = [];
     let route = 'marketplace';
-    if(label) {
+    if (label) {
       route = route + '?q=label:' + label;
     }
     this.apiService.get(route).subscribe(
       data => {
-        var cf_services = data['resources'];
-        if(cf_services == null) return false;
-        for(var cf_service of cf_services) {
-          if(cf_service.entity.label == environment.configServiceLabel || cf_service.entity.label == environment.registryServiceLabel) {
+        const cf_services = data['resources'];
+        if (cf_services == null) { return false; }
+        for (const cf_service of cf_services) {
+          if (cf_service.entity.label == environment.configServiceLabel || cf_service.entity.label == environment.registryServiceLabel) {
             continue;
           }
           this.marketServices.push({
@@ -367,16 +376,16 @@ export class EditComponent implements OnInit {
   }
 
   listApis(name: string) {
-    if(this.Apis.length > 0) return;
+    if (this.Apis.length > 0) { return; }
     this.Apis = [];
     let route = 'apps/env?env=' + environment.cfEnvNameMSA;
-    if(name) {
+    if (name) {
       route = route + '&name=' + name;
     }
     this.apiService.get<any>('apigateway').subscribe(
       data => {
-        if(data) {
-          for (var d of data) {
+        if (data) {
+          for (const d of data) {
             this.Apis.push({
               id: d.id,
               name: d.name
@@ -395,31 +404,56 @@ export class EditComponent implements OnInit {
     );
   }
 
-  delAppApi(id: number, microid: number) {
-    if(!confirm("삭제하시겠습니까?")) {
+  delAppApi(id: number, microid: number, microname: string ) {
+    if (!confirm('삭제하시겠습니까?')) {
       return;
     }
 
-    this.apiService.delete<MicroApi>(`apigateway/${id}/api?microid=${microid}`).subscribe(
+    this.apiService.delete<MicroApi>(`apigateway/${id}/api?microId=${microid}&microName=${microname}`).subscribe(
       data => {
-        console.log(data)
-        alert("삭제되었습니다.");
+        alert('삭제되었습니다.');
         this.listAppApis();
       }
     );
   }
 
-  showAddApi(microApi: MicroApi){
+  resetAppApiPassword(microApi: MicroApi) {
+    //(click)="showAddApi(api)"
+    //microapi.id, microapi.microId, microapi.name, microapi.username
+    if (!confirm('계정 정보를 초기화 하시겠습니까?')) {
+      return;
+    }
+    /*
+    this.apiService.delete<MicroApi>(`apigateway/${microApi.id}/api?microid=${microApi.microId}&microname=${microApi.name}`).subscribe(
+      data => {
+        console.log(data)
+        //alert("삭제되었습니다.")
+        this.showAddApi(microApi)
+        //this.listAppApis();
+      }
+    );
+    */
+    this.showAddApi(microApi);
+  }
+
+  showAddApi(microApi: MicroApi) {
     jQuery('.ui.modal.addapi')
       .modal({
         inverted: true
       })
       .modal('show')
     ;
-    this.selectedMicroapi.username = "";
-    this.selectedMicroapi.userpassword = "";
-    this.selectedMicroapi = microApi;
-  }
+    console.log(microApi);
+    if (microApi.image == null) {
+      this.selectedMicroapi.username = null;
+      this.selectedMicroapi.userpassword = null;
+      this.selectedMicroapi.image = null;
+      this.selectedMicroapi.path = null;
+    } else {
+      this.selectedMicroapi.userpassword = '';
+    }
+    Object.assign(this.selectedMicroapi, microApi);
+ }
 
   getSwagger(microApi: MicroApi) {
     // this.swaggerApiName = microApi.name;
@@ -438,12 +472,29 @@ export class EditComponent implements OnInit {
     }
   }
 
-  addApi(){
+  // test로 설치 안했을 경우엔 달라질 수 있음.
+  addApi(path: String) {
+    if (this.selectedMicroapi.username == 'test') {
+      alert('test는 이미 존재하는 ID입니다.');
+      return;
+    }
+    console.log('path가 존재하면 계정 정보 수정');
 
-    if (this.micro.id != 0 && this.selectedMicroapi.username != "" && this.selectedMicroapi.userpassword != "") {
+    if (this.micro.id != 0 && this.selectedMicroapi.username != '' && this.selectedMicroapi.userpassword != '' && path == null) {
       this.selectedMicroapi.microId = this.micro.id;
 
       this.apiService.post<MicroApi>(`apigateway/${this.micro.id}/api`, this.selectedMicroapi).subscribe(
+        data => {
+          this.listAppApis();
+        },
+        err => {
+          alert(err.error);
+        }
+      );
+    } else if (this.micro.id != 0 && this.selectedMicroapi.username != '' && this.selectedMicroapi.userpassword != '' && path != '') {
+      this.selectedMicroapi.microId = this.micro.id;
+
+      this.apiService.put<MicroApi>(`apigateway/${this.micro.id}/api`, this.selectedMicroapi).subscribe(
         data => {
           this.listAppApis();
         },
@@ -460,9 +511,9 @@ export class EditComponent implements OnInit {
   }
   infoNode(node) {
     jQuery('.ui.mini.modal').modal({inverted: true}).modal('show');
-    let data = this.nodeDatas.get(node.id);
+    const data = this.nodeDatas.get(node.id);
     this.modal['type'] = node.type;
-    if(data && data.entity) {
+    if (data && data.entity) {
       this.modal['node_name'] = data.entity.name;
       if (node.type == 'App') {
         this.modal['instances'] = data.entity.instances;
@@ -474,22 +525,22 @@ export class EditComponent implements OnInit {
     }
   }
   removeNode(node) {
-    if(node.name.startsWith('gatewayapp-micro')){
+    if (node.name.startsWith('gatewayapp-micro')) {
       alert('삭제할 수 없습니다.');
       return;
     }
-    if(!confirm('삭제하시겠습니까?')) {
+    if (!confirm('삭제하시겠습니까?')) {
       return;
     }
-    for(var i = 0; i < this.nodes.length; i++) {
-      if(this.nodes[i].id === node.id) {
-        if(!this.nodes[i].id.startsWith('INITIAL_')) {
+    for (let i = 0; i < this.nodes.length; i++) {
+      if (this.nodes[i].id === node.id) {
+        if (!this.nodes[i].id.startsWith('INITIAL_')) {
           this.delNodes.push(this.nodes[i]); // 삭제노드
         }
-        this.nodes.splice(i,1);
-        for(var j = 0; j < this.links.length; j++) {
-          if(this.links[j].sNode['id'] == node.id || this.links[j].tNode['id'] == node.id) {
-            this.links.splice(j,1);
+        this.nodes.splice(i, 1);
+        for (let j = 0; j < this.links.length; j++) {
+          if (this.links[j].sNode['id'] == node.id || this.links[j].tNode['id'] == node.id) {
+            this.links.splice(j, 1);
             j = j - 1;
           }
         }
@@ -500,15 +551,15 @@ export class EditComponent implements OnInit {
   putLink(link) {
     let sourceNode;
     let targetNode;
-    for(var node of this.nodes) {
-      if(node.id == link.sNode.id) {
+    for (const node of this.nodes) {
+      if (node.id == link.sNode.id) {
         sourceNode = node;
       }
-      if(node.id == link.tNode.id) {
+      if (node.id == link.tNode.id) {
         targetNode = node;
       }
     }
-    if(sourceNode.type == environment.nodeTypeService) {
+    if (sourceNode.type == environment.nodeTypeService) {
       alert('Service에서 연결할 수 없습니다.');
       this.links.splice(this.links.indexOf(link), 1);
     }
@@ -517,14 +568,14 @@ export class EditComponent implements OnInit {
      this.links.splice(this.links.indexOf(link), 1);
      }*/
     // app -> service
-    if(sourceNode.type == environment.nodeTypeApp && targetNode.type == environment.nodeTypeService) {
+    if (sourceNode.type == environment.nodeTypeApp && targetNode.type == environment.nodeTypeService) {
       link.type = environment.nodeTypeService;
-      if(!sourceNode.name.startsWith("gatewayapp")) {
+      if (!sourceNode.name.startsWith('gatewayapp')) {
         this.bindings.push({app: sourceNode.id, service: targetNode.id});
       }
     }
     // app <-> gatewayApp : ass network policy
-    if(sourceNode.type == environment.nodeTypeApp && targetNode.type == environment.nodeTypeApp) {
+    if (sourceNode.type == environment.nodeTypeApp && targetNode.type == environment.nodeTypeApp) {
       this.viewNetwork = {
         id: link.id,
         source: sourceNode,
@@ -534,11 +585,11 @@ export class EditComponent implements OnInit {
       };
       this.networkPolicyMaps.set(link.id, this.viewNetwork);
       setTimeout(() => {
-        document.getElementById('link-path-'+link.id).dispatchEvent(new Event('click'));
+        document.getElementById('link-path-' + link.id).dispatchEvent(new Event('click'));
       });
       // gateway -> app : add route
-      if (sourceNode.name.startsWith("gatewayapp")) {
-        let idx = this.routes.length - 1;
+      if (sourceNode.name.startsWith('gatewayapp')) {
+        const idx = this.routes.length - 1;
         if (this.routes[idx].linkId == '' && this.routes[idx].service == '') {
           this.routes[idx] = {
             linkId: link.id,
@@ -557,35 +608,46 @@ export class EditComponent implements OnInit {
     }
   }
   getLink(link) {
-    if(link.type != environment.nodeTypeService) {
+    if (link.type != environment.nodeTypeService) {
       this.tabNetwork.nativeElement.click();
       this.viewNetwork = this.networkPolicyMaps.get(link.id);
     }
   }
 
   initViewNetwork() {
-    let node = new Node();
+    const node = new Node();
     node.name = '';
-    this.viewNetwork = {id: '', source: node, target: node, protocol: "", port: ""};
+    this.viewNetwork = {id: '', source: node, target: node, protocol: '', port: ''};
   }
   deleteNetwork(network) {
-    if(!confirm("삭제하시겠습니까?")){
+    console.log(network);
+    console.log(this.viewNetwork);
+    if (!confirm('삭제하시겠습니까?')) {
       return;
     }
-    if(network.source.id == undefined) {
+
+    if (network.source.id == undefined) {
       return;
     }
-    for(let i = 0; i < this.links.length; i++) {
-      if(this.links[i].id == this.viewNetwork.id) {
+    for (let i = 0; i < this.links.length; i++) {
+      if (this.links[i].id == this.viewNetwork.id) {
         this.links.splice(i, 1);
       }
     }
+
+    console.log('networkPolicyMaps()');
+    console.log(this.networkPolicyMaps);
+    this.delNetworkPolicyMaps.set(this.viewNetwork.id, this.networkPolicyMaps.get(this.viewNetwork.id));
+    console.log(this.delNetworkPolicyMaps);
+
     this.networkPolicyMaps.delete(this.viewNetwork.id);
+
     this.closeMenu();
     this.initViewNetwork();
   }
 
   addRoute() {
+    console.log('Add Network')
     this.routes.push({linkId: '', service: '', path: ''});
   }
   removeRoute(route) {
@@ -602,14 +664,14 @@ export class EditComponent implements OnInit {
     this.configs.push({app: '', property: ''});
   }
   deleteConfig(index) {
-    this.configs.splice(index,1);
+    this.configs.splice(index, 1);
   }
 
   save() {
-    if( !confirm("저장하시겠습니까 ?") ) {
+    if ( !confirm('저장하시겠습니까 ?') ) {
       return;
     }
-    let services = {resources: []};
+    const services = {resources: []};
     services.resources.push({
       metadata: {guid: this.configService.metadata.guid},
       entity: {name: this.configService.entity.name, service_plan_guid: this.configService.entity.service_plan_guid}
@@ -618,41 +680,43 @@ export class EditComponent implements OnInit {
       metadata: {guid: this.registryService.metadata.guid},
       entity: {name: this.registryService.entity.name, service_plan_guid: this.registryService.entity.service_plan_guid}
     });
-    let apps = {resources: []};
-    let serviceBindings = {resources: []};
-    let networkPolicies = [];
-    let routes = [];
-    let configs = [];
-    for(var node of this.nodes) {
-      if(node.type == 'Service') {
+    const apps = {resources: []};
+    const serviceBindings = {resources: []};
+    const networkPolicies = [];
+    // 0217
+    const delpolicies = [];
+    const routes = [];
+    const configs = [];
+    for (const node of this.nodes) {
+      if (node.type == 'Service') {
         let servicePlanGuid = '';
-        for(var marketService of this.marketServices) {
-          if(node.id == 'INITIAL_'+marketService.id) {
-            if(marketService.plans.length > 0) {
+        for (const marketService of this.marketServices) {
+          if (node.id == 'INITIAL_' + marketService.id) {
+            if (marketService.plans.length > 0) {
               servicePlanGuid = marketService.plans[0];
             }
             break;
           }
         }
         services.resources.push({metadata: {guid: node.id}, entity: {name: node.name, service_plan_guid: servicePlanGuid}});
-      } else if(node.type == 'App') {
+      } else if (node.type == 'App') {
         apps.resources.push({metadata: {guid: node.id}, entity: {name: node.name}});
-        serviceBindings.resources.push({entity :{app_guid: node.id, service_instance_guid: this.configService.metadata.guid}});
-        serviceBindings.resources.push({entity :{app_guid: node.id, service_instance_guid: this.registryService.metadata.guid}});
+        serviceBindings.resources.push({entity : {app_guid: node.id, service_instance_guid: this.configService.metadata.guid}});
+        serviceBindings.resources.push({entity : {app_guid: node.id, service_instance_guid: this.registryService.metadata.guid}});
       }
     }
-    for(var binding of this.bindings) {
-      serviceBindings.resources.push({entity :{app_guid: binding.app, service_instance_guid: binding.service}});
+    for (const binding of this.bindings) {
+      serviceBindings.resources.push({entity : {app_guid: binding.app, service_instance_guid: binding.service}});
     }
     // for(let app of apps.resources){
-      // for(let binding of this.bindings){
-      //   if(app.metadata.guid == binding.app){
-      //     app.entity.state = 'back';
-      //   }
-      // }
+    // for(let binding of this.bindings){
+    //   if(app.metadata.guid == binding.app){
+    //     app.entity.state = 'back';
+    //   }
     // }
-    for(let key of Array.from( this.networkPolicyMaps.keys() )) {
-      let policy = {
+    // }
+    for (const key of Array.from( this.networkPolicyMaps.keys() )) {
+      const policy = {
         source: {
           id: this.networkPolicyMaps.get(key).source.id
         },
@@ -666,52 +730,81 @@ export class EditComponent implements OnInit {
         }
       };
       networkPolicies.push(policy);
-
       // frontend
-      for(let node of this.nodes){
-        if(node.id == policy.destination.id && node.name.startsWith("gatewayapp-micro")) {
-          for(let app of apps.resources){
-            if(app.metadata.guid == policy.source.id){
+      for (const node of this.nodes) {
+        if (node.id == policy.destination.id && node.name.startsWith('gatewayapp-micro')) {
+          for (const app of apps.resources) {
+            if (app.metadata.guid == policy.source.id) {
               app.entity.state = 'front';
             }
           }
         }
       }
     }
-    for(let route of this.routes) {
+
+    // 0217
+    for (const deletedKey of Array.from( this.delNetworkPolicyMaps.keys() )) {
+      const deletedPolicy = {
+        source: {
+          id: this.delNetworkPolicyMaps.get(deletedKey).source.id
+        },
+        destination: {
+          id: this.delNetworkPolicyMaps.get(deletedKey).target.id,
+          ports: {
+            start: this.delNetworkPolicyMaps.get(deletedKey).port,
+            end: this.delNetworkPolicyMaps.get(deletedKey).port
+          },
+          protocol: this.delNetworkPolicyMaps.get(deletedKey).protocol
+        }
+      };
+      delpolicies.push(deletedPolicy);
+      // 0217
+      console.log('delPolicies: ');
+      console.log(delpolicies);
+    }
+
+    for (const route of this.routes) {
       routes.push({service: route.service, path: route.path});
     }
-    let configMap: Map<string, any> = new Map<string, any>();
-    for(let config of this.configs) {
+    const configMap: Map<string, any> = new Map<string, any>();
+    for (const config of this.configs) {
       let properties = [];
-      if(configMap.get(config['app']) != undefined) {
+      if (configMap.get(config['app']) != undefined) {
         properties = configMap.get(config['app']);
       }
-      let property = {};
+      const property = {};
       property[config['property'].split('=')[0]] = config['property'].split('=')[1];
       properties.push(property);
       configMap.set(config['app'], properties);
     }
     configMap.forEach((value: JSON, key: string) => {
-      configs.push({app:key, property:value});
+      configs.push({app: key, property: value});
     });
-    var status = this.micro['status'];
-    if(status == 'INITIAL') {
+    let status = this.micro['status'];
+    if (status == 'INITIAL') {
       status = 'STOPPED';
     }
 
     // 삭제노드
-    let delapps = {resources: []};
-    let delservices = {resources: []};
-    for(var node of this.delNodes) {
-      if(node.type == 'Service') {
+    const delapps = {resources: []};
+    const delservices = {resources: []};
+    for (const node of this.delNodes) {
+      if (node.type == 'Service') {
         delservices.resources.push({metadata: {guid: node.id}, entity: {name: node.name, service_plan_guid: ''}});
-      } else if(node.type == 'App') {
+      } else if (node.type == 'App') {
         delapps.resources.push({metadata: {guid: node.id}, entity: {name: node.name}});
       }
     }
 
-    let compose = {
+    console.log(apps);
+    console.log(apps.resources.length);
+
+    if ( apps.resources.length <= 1 ) {
+      alert('한 개 이상 앱을 연결해주세요.');
+      return;
+    }
+
+    const compose = {
       id: this.micro.id,
       name: this.micro.name,
       orgGuid: this.micro['orgGuid'],
@@ -724,6 +817,7 @@ export class EditComponent implements OnInit {
         apps: apps,
         serviceBindings: serviceBindings,
         policies: networkPolicies,
+        delpolicies: delpolicies,
         routes: routes,
         configs: configs,
         delapps: delapps,
@@ -731,49 +825,55 @@ export class EditComponent implements OnInit {
       }
     };
 
-    this.apiService.put('microservices/'+this.micro.id+'/composition', compose).subscribe(
+    this.apiService.put('microservices/' + this.micro.id + '/composition', compose).subscribe(
       res => {
-        alert("저장되었습니다.");
-        if(this.micro.status == 'INITIAL') {
+        alert('저장되었습니다.');
+        if (this.micro.status == 'INITIAL') {
           this.micro.status = 'STOPPED';
         }
         this.delNodes = [];
       }, err => {
         console.log(JSON.stringify(err.headers));
-        alert(err.status+" "+err.message);
+        alert(err.status + ' ' + err.message);
       }
     );
 
   }
 
   start() {
-    let data = {
+    const data = {
       name: this.micro['name'],
       spaceGuid: this.micro['spaceGuid'],
       status: 'STARTED'
     };
-    this.apiService.put('microservices/'+this.micro.id+'/state', data).subscribe(
+    this.apiService.put('microservices/' + this.micro.id + '/state', data).subscribe(
       res => {
-        if(confirm("시작되었습니다. 상세조회 화면으로 이동하시겠습니까?")) {
-          this.router.navigate(['/detail/'+this.micro.id]);
+        if (confirm('시작되었습니다. 상세조회 화면으로 이동하시겠습니까?')) {
+          this.router.navigate(['/detail/' + this.micro.id]);
         }
         this.micro.status = 'STARTED';
       }, err => {
         console.log(JSON.stringify(err.headers));
-        alert(err.status+" "+err.message);
+        console.log(err.status + ' ' + err.message);
+        alert("err: " + err.status + " " +err.error);
       }
     );
   }
 
+  stop() {
+    console.log('STOP STOP');
+  }
+
   delete() {
-    if( confirm("마이크로서비스를 삭제하시겠습니까 ?") ) {
+    if ( confirm('마이크로서비스를 삭제하시겠습니까 ?') ) {
       this.apiService.delete('microservices/' + this.micro.id).subscribe(
         res => {
-          alert("삭제되었습니다.");
+          alert('삭제되었습니다.');
           this.router.navigate(['list']);
         }, err => {
           console.log(JSON.stringify(err.headers));
-          console.log(err.status + " " + err.message);
+          console.log(err.status + ' ' + err.message);
+          alert(err.error);
         }
       );
     }

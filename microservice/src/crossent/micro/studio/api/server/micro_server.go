@@ -38,6 +38,8 @@ type SpaceResponse struct {
 }
 
 type AppResponse struct {
+	Total_results int `json:"total_results"`
+	Total_pages int    `json:"total_pages"`
 	Resources []struct {
 		Metadata struct {
 				 GUID	string `json:"guid"`
@@ -53,6 +55,28 @@ type AppResponse struct {
 				 Environment map[string]string `json:"environment_json"`
 			 } `json:"entity"`
 	} `json:"resources"`
+}
+
+type OrgSummary struct {
+	Guid string `json:"guid"`
+	Name string `json:"name"`
+	Status string `json:"status"`
+	Spaces []struct{
+		Guid string `json:"guid"`
+		Name string `json:"name"`
+		Service_count int32 `json:"service_count"`
+		App_count int32 `json:"app_count"`
+		Mem_dev_total int32 `json:"mem_dev_total"`
+		Mem_prod_total int32 `json:"mem_prod_total"`
+	}
+}
+
+type SpaceSummary struct {
+	Guid string `json:"guid"`
+	Name string `json:"name"`
+	Status string `json:"status"`
+	Apps []apps `json:"apps"`
+	Services []services `json:"services"`
 }
 
 type AppSummary struct {
@@ -248,6 +272,33 @@ func (s *Server) GetOrg () OrgResponse {
 	return  response
 }
 
+func (s *Server) GetOrgSummary (orgguid string, token *client.CF_TOKEN) OrgSummary {
+
+	summary := fmt.Sprintf("/v2/organizations/%v/summary", orgguid)
+	var response OrgSummary
+	err := s.uaa.GetResourcesFromToken("GET", summary, nil, &response, token.AccessToken)
+
+	if err != nil {
+		s.logger.Error(err.Error(), err)
+	}
+
+	return response
+}
+
+func (s *Server) GetSpaceSummary (spaceguid string, token *client.CF_TOKEN) SpaceSummary {
+
+	summary := fmt.Sprintf("/v2/spaces/%v/summary", spaceguid)
+	var response SpaceSummary
+	err := s.uaa.GetResourcesFromToken("GET", summary, nil, &response, token.AccessToken)
+
+	if err != nil {
+		s.logger.Error(err.Error(), err)
+	}
+
+	return response
+}
+
+
 func (s *Server) ListSpace (w http.ResponseWriter, r *http.Request) {
 
 	route := fmt.Sprintf("/v2/spaces")
@@ -399,7 +450,6 @@ func (s *Server) ListApp (w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) ListAppByEnv (w http.ResponseWriter, r *http.Request) {
-
 	 // session user id
 	session := domain.SessionManager.Load(r)
 	userid, _ := session.GetString(domain.USER_ID)
@@ -408,35 +458,44 @@ func (s *Server) ListAppByEnv (w http.ResponseWriter, r *http.Request) {
 	envName := r.FormValue("env")
 	envPrivate := r.FormValue("private")
 
-	route := fmt.Sprintf("/v2/apps")
-	if name != "" {
-		route = fmt.Sprintf("%v?q=name:%v", route, name)
-	}
 	var result AppResponse
 	var response AppResponse
-	error := s.uaa.GetResources("GET", route, nil, &result)
 
-	if error != nil {
-		http.Error(w, error.Error(), http.StatusInternalServerError)
-		return
-	}
+	// loop를 돌리기 위한 첫 total_page값
+	result.Total_pages = 2
+	for currentPage := 1; currentPage <= result.Total_pages; currentPage++ {
+		route := fmt.Sprintf("/v2/apps?results-per-page=%v", 50)
+		if name != "" {
+			route = fmt.Sprintf("%v?q=name:%v", route, name)
+		} else {
+			//route = fmt.Sprintf("%v?results-per-page=%v", route, 10)
+			route = fmt.Sprintf("%v&page=%v", route, currentPage)
+		}
 
-	for _, app := range result.Resources {
-		if _, ok := app.Entity.Environment[envName]; ok {
-			if _, private := app.Entity.Environment[envPrivate]; private {
-				if userid == app.Entity.Environment[envPrivate] {
+		error := s.uaa.GetResources("GET", route, nil, &result)
+		if error != nil {
+			http.Error(w, error.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		for _, app := range result.Resources {
+			if _, ok := app.Entity.Environment[envName]; ok {
+				if _, private := app.Entity.Environment[envPrivate]; private {
+					if app.Entity.Environment[envPrivate] == "" || userid == app.Entity.Environment[envPrivate] {
+						response.Resources = append(response.Resources, app)
+					}
+				}else{
 					response.Resources = append(response.Resources, app)
 				}
-			}else{
-				response.Resources = append(response.Resources, app)
 			}
 		}
 	}
+	response.Total_pages = result.Total_pages
+	response.Total_results = result.Total_results
 
 	if err := json.NewEncoder(w).Encode(response); err != nil {
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 	}
-
 }
 
 func (s *Server) GetApp () AppResponse {
